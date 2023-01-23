@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Instantly</string>
+    <string name="askingPermission"> Permission Required</string>
+    <string name="locationReason"> <b>Allow location permission</b> \n <i>Android 6.0+ need to open it to detect Hotspot nearby.</i></string>
+    <string name="fileReason"> <b>Allow file permission</b> \n <i> We require to list the files ,\n so that you can select what ever you want to share</i></string>
+    <string name="wifiReason"> <b>Open WLAN</b> \n <i>Wifi is required to connect with another person</i></string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
