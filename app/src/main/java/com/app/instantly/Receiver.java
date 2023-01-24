@@ -1,12 +1,15 @@
 package com.app.instantly;
 import android.annotation.SuppressLint;
+import android.graphics.Point;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.view.View;
+import android.view.Display;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,8 +24,15 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import androidmads.library.qrgenearator.QRGContents;
+import androidmads.library.qrgenearator.QRGEncoder;
+
+
+import android.graphics.Bitmap;
+import android.widget.ImageView;
+
 @SuppressLint("SetTextI18n")
-public class Server extends AppCompatActivity {
+public class Receiver extends AppCompatActivity {
     ServerSocket serverSocket;
     Thread Thread1 = null;
     TextView tvIP, tvPort;
@@ -30,15 +40,19 @@ public class Server extends AppCompatActivity {
     EditText etMessage;
     Button btnSend;
 
+    Bitmap bitmap;
+    QRGEncoder qrgEncoder;
+
+
     public static String SERVER_IP = "";
-    public static final int SERVER_PORT = 8080;
+    public static final String SERVER_PORT = "8080";
     String message;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_server);
+        setContentView(R.layout.activity_reciever);
         tvIP = findViewById(R.id.tvIP);
         tvPort = findViewById(R.id.tvPort);
         tvMessages = findViewById(R.id.tvMessages);
@@ -51,6 +65,9 @@ public class Server extends AppCompatActivity {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
+
+        generateQrCode(SERVER_IP+","+SERVER_PORT);
+
         Thread1 = new Thread(new Thread1());
         Thread1.start();
         btnSend.setOnClickListener(v -> {
@@ -74,14 +91,11 @@ public class Server extends AppCompatActivity {
         public void run() {
             Socket socket;
             try {
-                serverSocket = new ServerSocket(SERVER_PORT);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tvMessages.setText("Not connected");
-                        tvIP.setText("IP: " + SERVER_IP);
-                        tvPort.setText("Port: " + String.valueOf(SERVER_PORT));
-                    }
+                serverSocket = new ServerSocket(Integer.parseInt(SERVER_PORT));
+                runOnUiThread(() -> {
+                    tvMessages.setText("Not connected");
+                    tvIP.setText("IP: " + SERVER_IP);
+                    tvPort.setText("Port: " + SERVER_PORT);
                 });
                 try {
                     socket = serverSocket.accept();
@@ -91,6 +105,10 @@ public class Server extends AppCompatActivity {
                     new Thread(new Thread2()).start();
                 } catch (IOException e) {
                     e.printStackTrace();
+                }
+                finally{
+                    serverSocket.close();
+                    Toast.makeText(Receiver.this, "Closing Socket", Toast.LENGTH_SHORT).show();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -104,12 +122,7 @@ public class Server extends AppCompatActivity {
                 try {
                     final String message = input.readLine();
                     if (message!= null) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                tvMessages.append("client:" + message + " ");
-                            }
-                        });
+                        runOnUiThread(() -> tvMessages.append("client:" + message + " "));
                     } else {
                         Thread1 = new Thread(new Thread1());
                         Thread1.start();
@@ -130,13 +143,27 @@ public class Server extends AppCompatActivity {
         public void run() {
             output.write(message);
             output.flush();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    tvMessages.append("server: " + message + " ");
-                    etMessage.setText("");
-                }
+            runOnUiThread(() -> {
+                tvMessages.append("server: " + message + " ");
+                etMessage.setText("");
             });
         }
+    }
+
+
+
+    public void generateQrCode(String data){
+            ImageView qrCodeIV = findViewById(R.id.idIVQrcode);
+            WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
+            Display display = manager.getDefaultDisplay();
+            Point point = new Point();
+            display.getSize(point);
+            int width = point.x;
+            int height = point.y;
+            int dimen = Math.min(width, height);
+            dimen = dimen * 3 / 4;
+            qrgEncoder = new QRGEncoder(data, null, QRGContents.Type.TEXT, dimen);
+            bitmap = qrgEncoder.getBitmap(0);
+            qrCodeIV.setImageBitmap(bitmap);
     }
 }

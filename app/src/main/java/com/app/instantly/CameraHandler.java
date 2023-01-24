@@ -2,7 +2,6 @@ package com.app.instantly;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -13,7 +12,7 @@ import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
 
-public class SenderActivity extends AppCompatActivity   {
+public class CameraHandler extends AppCompatActivity   {
 
     private static final int PERMISSION_REQUEST_CAMERA = 0;
 
@@ -21,9 +20,8 @@ public class SenderActivity extends AppCompatActivity   {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sender);
+        setContentView(R.layout.activity_camera_handler);
 
-        Button test = findViewById(R.id.testBtn);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Camera Started", Toast.LENGTH_SHORT).show();
             scanCode();
@@ -43,9 +41,10 @@ public class SenderActivity extends AppCompatActivity   {
         options.setPrompt("Volume Up to flash on");
         options.setBeepEnabled(true);
         options.setOrientationLocked(true);
-        options.setCaptureActivity(ScannerActivity.class);
+        options.setCaptureActivity(ScannerForSender.class);
         barLauncher.launch(options);
     }
+
     ActivityResultLauncher<ScanOptions> barLauncher = registerForActivityResult(new ScanContract(),result -> {
         if(result.getContents()!=null){
             Toast.makeText(this, result.getContents(), Toast.LENGTH_LONG).show();

@@ -2,14 +2,11 @@ package com.app.instantly;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.ProgressBar;
 
-public class WifiOrHotspotActivity extends AppCompatActivity {
+public class WifiOrHotspot extends AppCompatActivity {
 
     Button wifiMode ;
     Button hotspotMode;
@@ -22,14 +19,15 @@ public class WifiOrHotspotActivity extends AppCompatActivity {
         Intent i = new Intent(getApplicationContext(),QrCodeGenerate.class);
 
         wifiMode.setOnClickListener(v -> {
-            i.putExtra("key", "WIFI");
-            startActivity(i);
+//            i.putExtra("key", "WIFI");
+//            startActivity(i);
+            startActivity(new Intent(getApplicationContext(), Receiver.class));
         });
 
         hotspotMode.setOnClickListener(v -> {
-//            i.putExtra("key", "HOTSPOT");
-//            startActivity(i);
-            startActivity(new Intent(getApplicationContext(),Server.class));
+            i.putExtra("key", "HOTSPOT");
+            startActivity(i);
+
         });
 
     }

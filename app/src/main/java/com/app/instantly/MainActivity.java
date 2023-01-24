@@ -14,9 +14,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.widget.Button;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
             if(ContextCompat.checkSelfPermission(
                     getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED
                     && Environment.isExternalStorageManager()
-                    && wifiManager.isWifiEnabled()) startActivity(new Intent(getApplicationContext(),SenderActivity.class));
+                    && wifiManager.isWifiEnabled()) startActivity(new Intent(getApplicationContext(), CameraHandler.class));
             else {
                 //key:0 for sender
                 permissionActivity.putExtra("key",0);

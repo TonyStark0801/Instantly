@@ -49,8 +49,8 @@ public class Permission extends AppCompatActivity {
             Bundle extras = getIntent().getExtras();
             if (extras != null) {
                 String value = extras.getString("key");
-                if (Objects.equals(value, "0"))  startActivity(new Intent(getApplicationContext(),SenderActivity.class));
-                else startActivity(new Intent(getApplicationContext(), WifiOrHotspotActivity.class));
+                if (Objects.equals(value, "0"))  startActivity(new Intent(getApplicationContext(), CameraHandler.class));
+                else startActivity(new Intent(getApplicationContext(), WifiOrHotspot.class));
             }
 
         }
@@ -136,8 +136,8 @@ public class Permission extends AppCompatActivity {
             Bundle extras = getIntent().getExtras();
             if (extras != null) {
                 String value = extras.getString("key");
-                if (Objects.equals(value, "0"))  startActivity(new Intent(getApplicationContext(),SenderActivity.class));
-                else startActivity(new Intent(getApplicationContext(), WifiOrHotspotActivity.class));
+                if (Objects.equals(value, "0"))  startActivity(new Intent(getApplicationContext(), CameraHandler.class));
+                else startActivity(new Intent(getApplicationContext(), WifiOrHotspot.class));
             }
             finish();
         }
@@ -145,7 +145,7 @@ public class Permission extends AppCompatActivity {
         if(Environment.isExternalStorageManager())  setInvisible(2); else setVisible(2);
         if(wifiManager.isWifiEnabled()) setInvisible(3); else setVisible(3);
         super.onResume();
-    };
+    }
 
     private void setInvisible(int code){
         switch (code){
