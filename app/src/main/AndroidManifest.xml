@@ -42,7 +42,7 @@
             android:label="Scan the QRcode..." />
         <activity
             android:name=".ScannerForSender"
-            android:screenOrientation="portrait"
+            android:screenOrientation="fullSensor"
             android:stateNotNeeded="true"
             android:theme="@style/zxing_CaptureTheme" />
         <activity

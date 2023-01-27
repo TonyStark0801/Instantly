@@ -18,7 +18,7 @@
         android:layout_height = "wrap_content"
         android:layout_below = "@+id/tvIP"
         android:textAppearance = "@style/Base.TextAppearance.AppCompat.Medium" />
-  />
+
 
     <TextView
         android:id="@+id/tvConnectionStatus"
@@ -39,7 +39,7 @@
 
 
     <ImageView
-        android:id="@+id/idIVQrcode"
+        android:id="@+id/IVQrcode"
         android:layout_width="match_parent"
         android:layout_height="20dp"
         android:layout_above="@+id/etMessage"

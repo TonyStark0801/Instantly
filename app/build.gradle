@@ -38,4 +38,5 @@ dependencies {
     implementation 'com.google.zxing:core:3.5.0'
     implementation 'com.github.androidmads:QRGenerator:1.0.1'
 
+
 }
