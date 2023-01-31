@@ -8,8 +8,10 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -23,7 +25,7 @@ import android.widget.TextView;
 import java.util.Objects;
 
 
-public class Permission extends AppCompatActivity {
+public class SenderPermission extends AppCompatActivity {
     Button location;
     TextView locationReasonTxt;
 
@@ -46,13 +48,7 @@ public class Permission extends AppCompatActivity {
                 && Environment.isExternalStorageManager()
                 && wifiManager.isWifiEnabled())
         {
-            Bundle extras = getIntent().getExtras();
-            if (extras != null) {
-                String value = extras.getString("key");
-                if (Objects.equals(value, "0"))  startActivity(new Intent(getApplicationContext(), CameraHandler.class));
-                else startActivity(new Intent(getApplicationContext(), WifiOrHotspot.class));
-            }
-
+            startActivity(new Intent(getApplicationContext(), CameraHandler.class));
         }
 
 
@@ -76,19 +72,52 @@ public class Permission extends AppCompatActivity {
         setInvisible(FILE_REQUEST_CODE);
         setInvisible(WIFI_REQUEST_CODE);
 
-        /* Location Permission */
+        LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+        boolean gps_enabled = false;
+        boolean network_enabled = false;
+
+        try {
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch(Exception ex) {}
+
+        try {
+            network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch(Exception ex) {}
+
+        if(!gps_enabled && !network_enabled) {
+            // notify user
+            new AlertDialog.Builder(this)
+                    .setMessage(R.string.gps_network_not_enabled)
+                    .setPositiveButton(R.string.open_location_settings, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                        }
+                    })
+                    .setNegativeButton(R.string.Cancel,null)
+                    .show();
+        }
+
+
+
+        /* Location SenderPermission */
         if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED) {
             location.setVisibility(View.VISIBLE);
             locationReasonTxt.setVisibility(View.VISIBLE);
             location.setOnClickListener(v -> {
+
+
+
+
+
+
+
+
+
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                    new AlertDialog.Builder(this).setTitle("Permission Needed").setMessage("Storage Permission is need to look for the files, so you can select it.\",LOCATION_PERMISSION_CODE );\n")
-                            .setPositiveButton("OK", (dialog, which) -> {
-                                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
-                            })
-                            .setNegativeButton("Cancel", ((dialog, which) -> {
-                                dialog.dismiss();
-                            }))
+                    new AlertDialog.Builder(this).setTitle("SenderPermission Needed").setMessage("Storage SenderPermission is need to look for the files, so you can select it.\",LOCATION_PERMISSION_CODE );\n")
+                            .setPositiveButton("OK", (dialog, which) -> ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE))
+                            .setNegativeButton("Cancel", ((dialog, which) -> dialog.dismiss()))
                             .create().show();
                 } else {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
@@ -98,7 +127,7 @@ public class Permission extends AppCompatActivity {
         }
 
 
-        /*File Permission*/
+        /*File SenderPermission*/
         if( !Environment.isExternalStorageManager() ){
             setVisible(2);
             file.setOnClickListener(v->{
@@ -116,7 +145,7 @@ public class Permission extends AppCompatActivity {
         }
 
 
-        /*Wifi Permission*/
+        /*Wifi SenderPermission*/
         if(!wifiManager.isWifiEnabled()){
             setVisible(WIFI_REQUEST_CODE);
             wifi.setOnClickListener(v->{
@@ -136,7 +165,7 @@ public class Permission extends AppCompatActivity {
             Bundle extras = getIntent().getExtras();
             if (extras != null) {
                 String value = extras.getString("key");
-                if (Objects.equals(value, "0"))  startActivity(new Intent(getApplicationContext(), CameraHandler.class));
+                if (Objects.equals(value, "SENDER"))  startActivity(new Intent(getApplicationContext(), CameraHandler.class));
                 else startActivity(new Intent(getApplicationContext(), WifiOrHotspot.class));
             }
             finish();

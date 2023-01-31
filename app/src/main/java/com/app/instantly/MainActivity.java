@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Button sendBtn = findViewById(R.id.sendBtn);
         Button receiveBtn = findViewById(R.id.receiveBtn);
-        Intent permissionActivity = new Intent(getApplicationContext(), Permission.class);
+        Intent permissionActivity = new Intent(getApplicationContext(), SenderPermission.class);
 
 
 
@@ -35,16 +35,14 @@ public class MainActivity extends AppCompatActivity {
                     && Environment.isExternalStorageManager()
                     && wifiManager.isWifiEnabled()) startActivity(new Intent(getApplicationContext(), CameraHandler.class));
             else {
-                //key:0 for sender
-                permissionActivity.putExtra("key",0);
+                permissionActivity.putExtra("key","SENDER");
                 startActivity(permissionActivity);
             }
         });
 
         receiveBtn.setOnClickListener(view ->{
-            //key:1 for sender
-            permissionActivity.putExtra("key",1);
-            startActivity(permissionActivity);
+            permissionActivity.putExtra("key","RECEIVER");
+            startActivity(new Intent(this, WifiOrHotspot.class));
         });
     }
 }

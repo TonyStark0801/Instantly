@@ -1,0 +1,6 @@
+#1 Internet must be on to get IP address
+#2 Location Service must be enabled
+#3 TOKEN = 3 for WIFI
+        else TOKEN = 5 for HOTSPOT
+
+#4

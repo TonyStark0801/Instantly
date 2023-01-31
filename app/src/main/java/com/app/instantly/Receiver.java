@@ -1,10 +1,14 @@
 package com.app.instantly;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.graphics.Point;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -12,6 +16,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 
@@ -19,12 +24,17 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Enumeration;
+import java.util.Objects;
 
 import androidmads.library.qrgenearator.QRGContents;
 import androidmads.library.qrgenearator.QRGEncoder;
@@ -51,7 +61,8 @@ public class Receiver extends AppCompatActivity {
     public static String SERVER_IP = "";
     public static final String SERVER_PORT = "8080";
     String message;
-
+    String SSID="";
+    String PASSWORD="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,13 +75,25 @@ public class Receiver extends AppCompatActivity {
         btnSend = findViewById(R.id.btnSend);
         connectionStatus = findViewById(R.id.tvConnectionStatus);
 
-        try {
+        Bundle extras = getIntent().getExtras();
+        String val = extras.getString("key");
+        if(Objects.equals(val,"HOTSPOT")){
+            createHotspot();
             SERVER_IP = getLocalIpAddress();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+        }
+        else{
+            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            assert wifiManager != null;
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            int ipInt = wifiInfo.getIpAddress();
+            try {
+                SERVER_IP = InetAddress.getByAddress(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(ipInt).array()).getHostAddress();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            generateQrCode("WIFI"+":"+SERVER_IP+":"+SERVER_PORT);
         }
 
-        generateQrCode(SERVER_IP+":"+SERVER_PORT);
 
         Thread1 = new Thread(new Thread1());
         Thread1.start();
@@ -85,12 +108,22 @@ public class Receiver extends AppCompatActivity {
             }
         });
     }
-    private String getLocalIpAddress() throws UnknownHostException {
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        assert wifiManager != null;
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        int ipInt = wifiInfo.getIpAddress();
-        return InetAddress.getByAddress(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(ipInt).array()).getHostAddress();
+
+    private String getLocalIpAddress() {
+            try {
+                for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                    NetworkInterface intf = en.nextElement();
+                    for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                        InetAddress inetAddress = enumIpAddr.nextElement();
+                        if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                            return inetAddress.getHostAddress();
+                        }
+                    }
+                }
+            } catch (SocketException ex) {
+                ex.printStackTrace();
+            }
+            return null;
     }
 
 
@@ -141,11 +174,10 @@ public class Receiver extends AppCompatActivity {
         }
     }
     class Thread3 implements Runnable{
-        private String message;
-        private byte[] bytes;
+        private final String message;
+
         Thread3(String message, byte[] bytes){
             this.message= message;
-            this.bytes = bytes;
         }
         @Override
         public void run() {
@@ -211,6 +243,39 @@ public class Receiver extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void createHotspot(){
+
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+        wifiManager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback() {
+            @RequiresApi(api = Build.VERSION_CODES.R)
+            @Override
+            public void onStarted(WifiManager.LocalOnlyHotspotReservation reservation) {
+                super.onStarted(reservation);
+                SSID +=reservation.getSoftApConfiguration().getSsid();
+                PASSWORD += reservation.getSoftApConfiguration().getPassphrase();
+                Log.d("HotSpot", "Hotspot started SSID: " + SSID + " Password: " + PASSWORD);
+                Toast.makeText(Receiver.this, "Hotspot started SSID: " + SSID + " Password: " + PASSWORD, Toast.LENGTH_SHORT).show();
+                generateQrCode("HOTSPOT"+":"+SSID+":"+PASSWORD+":"+SERVER_IP+":"+SERVER_PORT);
+            }
+
+            @Override
+            public void onStopped() {
+                super.onStopped();
+                Log.d("HotSpot", "Hotspot stopped");
+                Toast.makeText(Receiver.this, "Hotspot stopped", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailed(int reason) {
+                super.onFailed(reason);
+                Log.d("HotSpot", "Failed to start hotspot: " + reason);
+                Toast.makeText(Receiver.this, "Failed to start hotspot", Toast.LENGTH_SHORT).show();
+            }
+        }, new Handler());
+
     }
 
 }

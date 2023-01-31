@@ -3,8 +3,15 @@ package com.app.instantly;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
+import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -43,11 +50,16 @@ public class Sender extends AppCompatActivity {
 
 
         if (extras != null) {
-            String value = extras.getString("key");
-            String[] tokens = value.split(":");
-            IP+=tokens[0];
-            PORT+=tokens[1];
-            Toast.makeText(this, "Connecting", Toast.LENGTH_SHORT).show();
+            String[] TOKENS = extras.getStringArray("key");
+            if(Objects.equals(TOKENS[0], "HOTSPOT")) {
+                connectWifi(TOKENS[1],TOKENS[2]);
+                IP+=TOKENS[3];
+                PORT+=TOKENS[4];
+            }
+            else {
+                IP+=TOKENS[1];
+                PORT+=TOKENS[2];
+            }
             Thread1 = new Thread(new Thread1());
             Thread1.start();
         }
@@ -73,11 +85,38 @@ public class Sender extends AppCompatActivity {
         });
     }
 
+    private void connectWifi(String SSID, String PASSWORD) {
+        WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
+        builder.setSsid(String.valueOf(SSID));
+        builder.setWpa2Passphrase(String.valueOf(PASSWORD));
+        WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
+
+        NetworkRequest.Builder requestBuilder = new NetworkRequest.Builder();
+        requestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+        requestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
+        NetworkRequest request = requestBuilder.build();
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        connectivityManager.requestNetwork(request, new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                super.onAvailable(network);
+                Log.d("HotSpot", "Connected to hotspot " + SSID);
+                Toast.makeText(Sender.this, "Connected to Hotspot "+SSID, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onUnavailable() {
+                super.onUnavailable();
+                Log.d("HotSpot", "Failed to connect to hotspot " + SSID);
+                Toast.makeText(Sender.this, "Failed to connect to hotspot "+SSID, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
 
-
-    DataOutputStream output;
-    DataInputStream input;
+    public DataOutputStream output;
+    public DataInputStream input;
     class Thread1 implements Runnable {
 
         Socket socket=null;
@@ -93,16 +132,7 @@ public class Sender extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-//            finally{
-//                try {
-//                    if(socket!=null )socket.close();
-//                    if(output!=null )output.close();
-//                    if(input!=null )input.close();
-//                    runOnUiThread(()->{Toast.makeText(Sender.this, "Closing Socket", Toast.LENGTH_SHORT).show();});
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
+
 
         }
     }
