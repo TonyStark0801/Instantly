@@ -1,26 +1,38 @@
 package com.app.instantly;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.Uri;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 import java.util.Objects;
 
 public class Sender extends AppCompatActivity {
@@ -33,6 +45,7 @@ public class Sender extends AppCompatActivity {
     TextView connectionStatus;
     TextView OutMessage,InputMessage;
     Button btnSend;
+    Button btnSelect;
     byte[] bytes;
 
     @Override
@@ -45,6 +58,7 @@ public class Sender extends AppCompatActivity {
         OutMessage = findViewById(R.id.OutputMessage);
         InputMessage = findViewById(R.id.InputMessage);
         btnSend = findViewById(R.id.btnSend);
+        btnSelect = findViewById(R.id.btnSelectFile);
         OutMessage.setText("");
         Bundle extras = getIntent().getExtras();
 
@@ -70,6 +84,81 @@ public class Sender extends AppCompatActivity {
 
 
 
+        ActivityResultLauncher<Intent>  fileManager  = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData()!=null) {
+                        Intent i = result.getData();
+                        Uri uri = i.getData();
+
+                        Toast.makeText(this, uri.getPath(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+
+
+
+
+
+
+        Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        btnSelect.setOnClickListener(v->{
+            PopupMenu popupMenu = new PopupMenu(Sender.this, btnSelect);
+            popupMenu.getMenuInflater().inflate(R.menu.file_type, popupMenu.getMenu());
+            popupMenu.setOnMenuItemClickListener(menuItem -> {
+                switch (menuItem.getItemId()){
+                    case R.id.audio:
+                        fileIntent.setType("audio/*");
+                        try {
+                            fileManager.launch(fileIntent);
+                        } catch (ActivityNotFoundException e) {
+                            // Handle the exception, for example, by showing a Toast message to the user
+                            Toast.makeText(this, "No app found to handle this request.", Toast.LENGTH_LONG).show();
+                        }
+                        return  true;
+                    case R.id.image:
+                        fileIntent.setType("image/*");
+                        try {
+                            fileManager.launch(fileIntent);
+                        } catch (ActivityNotFoundException e) {
+                            // Handle the exception, for example, by showing a Toast message to the user
+                            Toast.makeText(this, "No app found to handle this request.", Toast.LENGTH_LONG).show();
+                        }
+
+                        return true;
+                    case R.id.video:
+                        fileIntent.setType("video/*");
+                        try {
+                            fileManager.launch(fileIntent);
+                        } catch (ActivityNotFoundException e) {
+                            // Handle the exception, for example, by showing a Toast message to the user
+                            Toast.makeText(this, "No app found to handle this request.", Toast.LENGTH_LONG).show();
+                        }
+                        return true;
+                    case R.id.files:
+                        fileIntent.setType("*/*");
+                        try {
+                            fileManager.launch(fileIntent);
+                        } catch (ActivityNotFoundException e) {
+                            // Handle the exception, for example, by showing a Toast message to the user
+                            Toast.makeText(this, "No app found to handle this request.", Toast.LENGTH_LONG).show();
+                        }
+                        return true;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + menuItem.getItemId());
+                }
+
+            });
+            popupMenu.show();
+
+
+
+        });
+
+
+
         btnSend.setOnClickListener(v -> {
             String message = InputMessage.getText().toString().trim();
             if (!message.isEmpty()) {
@@ -83,6 +172,21 @@ public class Sender extends AppCompatActivity {
 //
 //                }
         });
+    }
+
+    String getPathFromUri(Context context, Uri uri) {
+        Cursor cursor = null;
+        try {
+            String[] proj = {MediaStore.Images.Media.DATA};
+            cursor = context.getContentResolver().query(uri, proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
     }
 
     private void connectWifi(String SSID, String PASSWORD) {

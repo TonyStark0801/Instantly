@@ -40,12 +40,15 @@
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
 
-    <EditText
+    <TextView
         android:id="@+id/InputMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/btnSend"
-        android:hint="Enter Message"
+        android:layout_above="@+id/btnSelectFile"
+        android:layout_below="@+id/OutputMessage"
+        android:layout_marginTop="480dp"
+        android:layout_marginBottom="10dp"
+        android:hint="File path"
         android:inputType="text" />
 
     <Button
@@ -53,15 +56,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="1dp"
         android:text="SEND" />
 
-
-
-
-
-
-
-
+    <Button
+        android:id="@+id/btnSelectFile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/btnSend"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="1dp"
+        android:text="Select File" />
 
 
 </RelativeLayout>
