@@ -62,7 +62,6 @@ public class Sender extends AppCompatActivity {
         OutMessage.setText("");
         Bundle extras = getIntent().getExtras();
 
-
         if (extras != null) {
             String[] TOKENS = extras.getStringArray("key");
             if(Objects.equals(TOKENS[0], "HOTSPOT")) {
@@ -82,28 +81,8 @@ public class Sender extends AppCompatActivity {
         serverPort.setText("PORT: "+PORT);
         connectionStatus.setText(R.string.NotConnected);
 
-
-
-        ActivityResultLauncher<Intent>  fileManager  = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData()!=null) {
-                        Intent i = result.getData();
-                        Uri uri = i.getData();
-
-                        Toast.makeText(this, uri.getPath(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-
-
-
-
-
-
         Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
         fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
-
         btnSelect.setOnClickListener(v->{
             PopupMenu popupMenu = new PopupMenu(Sender.this, btnSelect);
             popupMenu.getMenuInflater().inflate(R.menu.file_type, popupMenu.getMenu());
@@ -111,49 +90,42 @@ public class Sender extends AppCompatActivity {
                 switch (menuItem.getItemId()){
                     case R.id.audio:
                         fileIntent.setType("audio/*");
-                        try {
-                            fileManager.launch(fileIntent);
-                        } catch (ActivityNotFoundException e) {
-                            // Handle the exception, for example, by showing a Toast message to the user
-                            Toast.makeText(this, "No app found to handle this request.", Toast.LENGTH_LONG).show();
+                        try{
+                            startActivityForResult(Intent.createChooser(fileIntent , "Select a File"),100);
+                        }catch (Exception e){
+                            Toast.makeText(this, "Please Install a File manager", Toast.LENGTH_SHORT).show();
                         }
                         return  true;
                     case R.id.image:
                         fileIntent.setType("image/*");
-                        try {
-                            fileManager.launch(fileIntent);
-                        } catch (ActivityNotFoundException e) {
-                            // Handle the exception, for example, by showing a Toast message to the user
-                            Toast.makeText(this, "No app found to handle this request.", Toast.LENGTH_LONG).show();
+                        try{
+                            startActivityForResult(Intent.createChooser(fileIntent , "Select a File"),100);
+                        }catch (Exception e){
+                            Toast.makeText(this, "Please Install a File manager", Toast.LENGTH_SHORT).show();
                         }
 
                         return true;
                     case R.id.video:
                         fileIntent.setType("video/*");
-                        try {
-                            fileManager.launch(fileIntent);
-                        } catch (ActivityNotFoundException e) {
-                            // Handle the exception, for example, by showing a Toast message to the user
-                            Toast.makeText(this, "No app found to handle this request.", Toast.LENGTH_LONG).show();
+                        try{
+                            startActivityForResult(Intent.createChooser(fileIntent , "Select a File"),100);
+                        }catch (Exception e){
+                            Toast.makeText(this, "Please Install a File manager", Toast.LENGTH_SHORT).show();
                         }
                         return true;
                     case R.id.files:
                         fileIntent.setType("*/*");
-                        try {
-                            fileManager.launch(fileIntent);
-                        } catch (ActivityNotFoundException e) {
-                            // Handle the exception, for example, by showing a Toast message to the user
-                            Toast.makeText(this, "No app found to handle this request.", Toast.LENGTH_LONG).show();
+                        try{
+                            startActivityForResult(Intent.createChooser(fileIntent , "Select a File"),100);
+                        }catch (Exception e){
+                            Toast.makeText(this, "Please Install a File manager", Toast.LENGTH_SHORT).show();
                         }
                         return true;
                     default:
                         throw new IllegalStateException("Unexpected value: " + menuItem.getItemId());
                 }
-
             });
             popupMenu.show();
-
-
 
         });
 
@@ -174,20 +146,22 @@ public class Sender extends AppCompatActivity {
         });
     }
 
-    String getPathFromUri(Context context, Uri uri) {
-        Cursor cursor = null;
-        try {
-            String[] proj = {MediaStore.Images.Media.DATA};
-            cursor = context.getContentResolver().query(uri, proj, null, null, null);
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            return cursor.getString(column_index);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
+
+    protected  void onActivityResult(int reqCode , int resCode ,Intent data){
+        if(reqCode == 100 && resCode == RESULT_OK && data!= null){
+            Uri uri = data.getData();
+            String FileName = FileActivity.getFileName(uri);
+            try {
+                bytes = FileActivity.getBytes(this, uri);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
+            Toast.makeText(this, FileName, Toast.LENGTH_SHORT).show();
         }
+        super.onActivityResult(reqCode,resCode,data);
     }
+
+
 
     private void connectWifi(String SSID, String PASSWORD) {
         WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
