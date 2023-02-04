@@ -25,9 +25,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GrantPermission"
         tools:targetApi="31">
-        <activity
-            android:name=".FileActivity"
-            android:exported="false" />
+
+
         <activity
             android:name=".ReceiverHotspotPermission"
             android:exported="false" />
@@ -61,6 +60,7 @@
             android:label="@string/askingPermission" />
         <activity
             android:name=".MainActivity"
+
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

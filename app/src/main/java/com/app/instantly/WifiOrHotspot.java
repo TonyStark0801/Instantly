@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.widget.Button;
 
+import java.util.Objects;
+
 public class WifiOrHotspot extends AppCompatActivity {
 
     Button wifiMode ;
@@ -19,6 +21,7 @@ public class WifiOrHotspot extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wifi_hotspot);
+        Objects.requireNonNull(getSupportActionBar()).hide();
         wifiMode = findViewById(R.id.WifiModeBtn);
         hotspotMode = findViewById(R.id.HotspotModeBtn);
 
