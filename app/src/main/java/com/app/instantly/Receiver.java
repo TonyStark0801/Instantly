@@ -7,6 +7,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Display;
@@ -20,10 +21,15 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -63,6 +69,7 @@ public class Receiver extends AppCompatActivity {
     String message;
     String SSID="";
     String PASSWORD="";
+    String fileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,37 +105,24 @@ public class Receiver extends AppCompatActivity {
         Thread1 = new Thread(new Thread1());
         Thread1.start();
         btnSend.setOnClickListener(v -> {
-            message = etMessage.getText().toString().trim();
-            if (!message.isEmpty()) {
-                Thread3=new Thread(new Thread3(message,bytes));
+            if (!fileName.isEmpty()) {
+                Thread3 = new Thread(new Thread3(fileName,bytes));
                 Thread3.start();
             }
-            else{
-                Toast.makeText(this, "Can't Send Empty message", Toast.LENGTH_SHORT).show();
+            else {
+                Toast.makeText(this, "Select a file", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private String getLocalIpAddress() {
-            try {
-                for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-                    NetworkInterface intf = en.nextElement();
-                    for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                        InetAddress inetAddress = enumIpAddr.nextElement();
-                        if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
-                            return inetAddress.getHostAddress();
-                        }
-                    }
-                }
-            } catch (SocketException ex) {
-                ex.printStackTrace();
-            }
-            return null;
-    }
 
 
-    DataOutputStream output;
-    DataInputStream input;
+
+    protected OutputStream os;
+    protected InputStream is;
+    protected  DataInputStream dataIS;
+    protected DataOutputStream  dataOS;
+
     class Thread1 implements Runnable {
         @Override
         public void run() {
@@ -142,10 +136,12 @@ public class Receiver extends AppCompatActivity {
                 });
                 socket = serverSocket.accept();
                 socket.setReuseAddress(true);
-                output = new DataOutputStream(socket.getOutputStream());
-                input=new DataInputStream(socket.getInputStream());
+                os = socket.getOutputStream();
+                is = socket.getInputStream();
+                dataOS = new DataOutputStream(os);
+                dataIS = new DataInputStream(is);
                 runOnUiThread(() -> connectionStatus.setText(R.string.Connected));
-                Thread2 =new Thread(new Thread2(socket));
+                Thread2 =new Thread(new Thread2());
                 Thread2.start();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -155,52 +151,103 @@ public class Receiver extends AppCompatActivity {
 
     }
     class Thread2 implements Runnable {
-        Socket socket;
-        Thread2(Socket socket){
-            this.socket=socket;
-        }
         @Override
         public void run() {
             while (true) {
                 try {
-                    final String message = input.readUTF();
-                    if (message!= null) {
-                        runOnUiThread(() -> tvMessages.append("client:" + message + " "));
+                    String fileName =  dataIS.readUTF();
+                    if(fileName!=null){
+                        runOnUiThread(() -> tvMessages.append("Sender: "+fileName+"\n"));
+                        int length = dataIS.readInt();                    // read length of incoming message
+                        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), fileName);
+                        if(length>0) {
+                            byte[] fileByte = new byte[length];
+                            dataIS.readFully(fileByte, 0, fileByte.length); // read the message
+                            try (FileOutputStream fos = new FileOutputStream(file)) {
+                                fos.write(fileByte);
+                                Log.d("Saved", "File Created: ");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                    else{
+                        Thread1 = new Thread(new Thread1());
+                        Thread1.start();
+                        return;
+                    }
+
+//                    FileOutputStream fos = new FileOutputStream("received_file.png");
+//                    byte[] buffer = new byte[4096];
+//                    int bytesRead;
+//                    while ((bytesRead = is.read(buffer)) != -1) {
+//                        fos.write(buffer, 0, bytesRead);
+//                    }
+//                    fos.flush();
+//                    fos.close();
+//                    is.close();
+//                    if (fileName!= null) {
+//                        runOnUiThread(() -> OutMessage.append("Server: " + fileName + "\n"));
+//                    }
+//                    Toast.makeText(Receiver.this, "File saved with name ", Toast.LENGTH_SHORT).show();
+                }  catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             }
         }
+
+
+
     }
     class Thread3 implements Runnable{
-        private final String message;
-
-        Thread3(String message, byte[] bytes){
-            this.message= message;
+        private String fileName;
+        private byte[] bytes;
+        Thread3(String fileName, byte[]bytes) {
+            this.fileName = fileName;
+            this.bytes = bytes;
         }
         @Override
         public void run() {
+            ByteArrayInputStream bais;
             try {
-                output.writeUTF(message);
-//                    f_output.writeObject(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                output.flush();
+
+
+                dataOS.writeUTF(fileName);
+                dataOS.flush();
+                runOnUiThread(() -> {
+                    tvMessages.append("client: " + fileName + "\n");
+                    etMessage.setText("");
+                });
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            runOnUiThread(() -> {
-                tvMessages.append("Server: "+message+"\n");
-                etMessage.setText("");
-            });
+
+
         }
     }
 
 
+
+
+    private String getLocalIpAddress() {
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                        return inetAddress.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 
     public void generateQrCode(String data){
             ImageView qrCodeIV = findViewById(R.id.IVQrcode);
@@ -233,14 +280,14 @@ public class Receiver extends AppCompatActivity {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
             }
-            if (input != null) {
-                input.close();
+            if (dataIS != null) {
+                dataIS.close();
             }
-            if (output != null) {
-                output.close();
+            if (dataOS != null) {
+                dataOS.close();
             }
-
-        } catch (IOException e) {
+        }
+            catch (IOException e) {
             e.printStackTrace();
         }
     }

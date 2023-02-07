@@ -19,6 +19,7 @@ import android.net.NetworkRequest;
 import android.net.Uri;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -27,12 +28,19 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.Objects;
 
 public class Sender extends AppCompatActivity {
@@ -47,6 +55,7 @@ public class Sender extends AppCompatActivity {
     Button btnSend;
     Button btnSelect;
     byte[] bytes;
+    String FileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,21 +137,12 @@ public class Sender extends AppCompatActivity {
             popupMenu.show();
 
         });
-
-
-
         btnSend.setOnClickListener(v -> {
-            String message = InputMessage.getText().toString().trim();
-            if (!message.isEmpty()) {
-                Thread3 = new Thread(new Thread3(message,bytes));
+
+            if (!FileName.isEmpty()) {
+                Thread3 = new Thread(new Thread3(FileName,bytes));
                 Thread3.start();
             }
-//                if(flag==1) {
-//                    Toast.makeText(Client.this, "Transferring", Toast.LENGTH_SHORT).show();
-//                    for (int i = 0; i < 1000; i++) ;
-//                    Toast.makeText(Client.this, "Failed", Toast.LENGTH_SHORT).show();
-//
-//                }
         });
     }
 
@@ -150,9 +150,17 @@ public class Sender extends AppCompatActivity {
     protected  void onActivityResult(int reqCode , int resCode ,Intent data){
         if(reqCode == 100 && resCode == RESULT_OK && data!= null){
             Uri uri = data.getData();
-            String FileName = FileActivity.getFileName(uri);
+            FileName = FileActivity.getFileName(this,uri);
             try {
                 bytes = FileActivity.getBytes(this, uri);
+
+//                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), FileName);
+//                try (FileOutputStream fos = new FileOutputStream(file)) {
+//                    fos.write(bytes);
+//                    Toast.makeText(this, "FIle created", Toast.LENGTH_SHORT).show();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -163,6 +171,9 @@ public class Sender extends AppCompatActivity {
 
 
 
+
+
+    //Connect the Sender device to Receiver's hotspot
     private void connectWifi(String SSID, String PASSWORD) {
         WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
         builder.setSsid(String.valueOf(SSID));
@@ -193,17 +204,30 @@ public class Sender extends AppCompatActivity {
     }
 
 
-    public DataOutputStream output;
-    public DataInputStream input;
-    class Thread1 implements Runnable {
 
+    protected InputStream is;
+    protected  OutputStream os;
+    protected DataOutputStream dataOS;
+    protected  DataInputStream dataIS;
+
+
+    //Connected
+    class Thread1 implements Runnable {
         Socket socket=null;
         public void run() {
-
             try {
                 socket = new Socket(IP, Integer.parseInt(PORT));
-                output = new DataOutputStream(socket.getOutputStream());
-                input = new DataInputStream(socket.getInputStream());
+//                Out = s;
+//                dataOut = new DataOutputStream(socket.getOutputStream());
+//                Input = socket.getInputStream();
+//                dataInput = new DataInputStream(Input);
+//                fileOut = new FileOutputStream();
+
+
+                os = socket.getOutputStream();
+                is = socket.getInputStream();
+                dataOS = new DataOutputStream(os);
+                dataIS = new DataInputStream(is);
                 runOnUiThread(() -> connectionStatus.setText(R.string.Connected));
                 Thread2 = new Thread(new Thread2());
                 Thread2.start();
@@ -219,41 +243,76 @@ public class Sender extends AppCompatActivity {
         public void run() {
             while (true) {
                 try {
-                    final String message = input.readUTF();
-                    if (message!= null) {
-                        runOnUiThread(() -> OutMessage.append("Server: " + message + "\n"));
+                    String fileName =  dataIS.readUTF();
+                    if (fileName!= null) {
+                        runOnUiThread(() -> OutMessage.append("Receiver: " + fileName + "\n"));
+                    } else {
+                        Thread1 = new Thread(new Thread1());
+                        Thread1.start();
+                        return;
                     }
+
+//                    FileOutputStream fos = new FileOutputStream("received_file.png");
+//                    byte[] buffer = new byte[4096];
+//                    int bytesRead;
+//                    while ((bytesRead = is.read(buffer)) != -1) {
+//                        fos.write(buffer, 0, bytesRead);
+//                    }
+//                    fos.flush();
+//                    fos.close();
+//                    is.close();
+////                    if (fileName!= null) {
+////                        runOnUiThread(() -> OutMessage.append("Server: " + fileName + "\n"));
+////                    }
+
+//                    Toast.makeText(Sender.this, "File saved with name ", Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
+
         }
     }
     class Thread3 implements Runnable {
-        private String message;
+        private String fileName;
         private byte[] bytes;
-        Thread3(String message, byte[]bytes) {
-            this.message = message;
+        Thread3(String fileName, byte[]bytes) {
+            this.fileName = fileName;
             this.bytes = bytes;
         }
         @Override
         public void run() {
             try {
-                output.writeUTF(message);
-//                f_output.write(bytes);
+                dataOS.writeUTF(fileName);
+                dataOS.writeInt(bytes.length);
+                dataOS.write(bytes);
+
+                dataOS.flush();
+                runOnUiThread(() -> {
+                    OutMessage.append("Sender: " + fileName + "\n");
+                    InputMessage.setText("");
+                });
+
+
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-            try {
-                output.flush();
-//                f_output.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            runOnUiThread(() -> {
-                OutMessage.append("client: " + message + "\n");
-                InputMessage.setText("");
-            });
+//            ByteArrayInputStream bais;
+//            try {
+//
+//
+//                bais = new ByteArrayInputStream(bytes);
+//                byte[] buffer = new byte[4096];
+//                int bytesRead;while ((bytesRead = bais.read(buffer)) != -1) {
+//                    os.write(buffer, 0, bytesRead);
+//                }
+//                os.flush();
+//                bais.close();
+//                os.close();
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+
         }
     }
 
@@ -273,12 +332,13 @@ public class Sender extends AppCompatActivity {
         super.onDestroy();
         try {
 
-            if (input != null) {
-                input.close();
+            if (dataIS != null) {
+                dataIS.close();
             }
-            if (output != null) {
-                output.close();
+            if (dataOS != null) {
+                dataOS.close();
             }
+
 
         } catch (IOException e) {
             e.printStackTrace();

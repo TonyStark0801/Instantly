@@ -14,7 +14,7 @@ public  class FileActivity {
     @SuppressLint("StaticFieldLeak")
     private static Context context;
     @SuppressLint("Range")
-    public static String getFileName(Uri uri) {
+    public static String getFileName(Context context,Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
             Cursor cursor =  context.getContentResolver().query(uri, null, null, null, null);
