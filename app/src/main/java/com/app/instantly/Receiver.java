@@ -84,12 +84,13 @@ public class Receiver extends AppCompatActivity {
 
         Bundle extras = getIntent().getExtras();
         String val = extras.getString("key");
-        if(Objects.equals(val,"HOTSPOT")){
-            createHotspot();
+        WifiManager wifiManager;
+        if (Objects.equals(val, "HOTSPOT")) {
+//            createHotspot();
             SERVER_IP = getLocalIpAddress();
-        }
-        else{
-            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            generateQrCode("WIFI" + ":" + SERVER_IP + ":" + SERVER_PORT);
+        } else {
+            wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
             assert wifiManager != null;
             WifiInfo wifiInfo = wifiManager.getConnectionInfo();
             int ipInt = wifiInfo.getIpAddress();
@@ -98,7 +99,7 @@ public class Receiver extends AppCompatActivity {
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }
-            generateQrCode("WIFI"+":"+SERVER_IP+":"+SERVER_PORT);
+            generateQrCode("WIFI" + ":" + SERVER_IP + ":" + SERVER_PORT);
         }
 
 
@@ -106,10 +107,9 @@ public class Receiver extends AppCompatActivity {
         Thread1.start();
         btnSend.setOnClickListener(v -> {
             if (!fileName.isEmpty()) {
-                Thread3 = new Thread(new Thread3(fileName,bytes));
+                Thread3 = new Thread(new Thread3(fileName, bytes));
                 Thread3.start();
-            }
-            else {
+            } else {
                 Toast.makeText(this, "Select a file", Toast.LENGTH_SHORT).show();
             }
         });
@@ -179,19 +179,6 @@ public class Receiver extends AppCompatActivity {
                         return;
                     }
 
-//                    FileOutputStream fos = new FileOutputStream("received_file.png");
-//                    byte[] buffer = new byte[4096];
-//                    int bytesRead;
-//                    while ((bytesRead = is.read(buffer)) != -1) {
-//                        fos.write(buffer, 0, bytesRead);
-//                    }
-//                    fos.flush();
-//                    fos.close();
-//                    is.close();
-//                    if (fileName!= null) {
-//                        runOnUiThread(() -> OutMessage.append("Server: " + fileName + "\n"));
-//                    }
-//                    Toast.makeText(Receiver.this, "File saved with name ", Toast.LENGTH_SHORT).show();
                 }  catch (IOException e) {
                 throw new RuntimeException(e);
             }

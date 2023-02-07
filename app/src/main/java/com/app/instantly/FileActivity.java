@@ -41,7 +41,7 @@ public  class FileActivity {
 
         byte[] bytesResult = null;
         ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-        int bufferSize = 1024;
+        int bufferSize = 4096;
         byte[] buffer = new byte[bufferSize];
         try {
             int len;

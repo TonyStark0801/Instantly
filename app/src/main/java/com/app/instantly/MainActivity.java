@@ -1,5 +1,6 @@
 package com.app.instantly;
 
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -44,7 +45,10 @@ public class MainActivity extends AppCompatActivity {
 
         receiveBtn.setOnClickListener(view ->{
             permissionActivity.putExtra("key","RECEIVER");
-            startActivity(new Intent(this, WifiOrHotspot.class));
+            Intent i = new Intent(this, Receiver.class);
+            i.putExtra("key","HOTSPOT");
+            startActivity(i);
+//            startActivity(new Intent(this, WifiOrHotspot.class));
         });
     }
 }

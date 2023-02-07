@@ -154,13 +154,6 @@ public class Sender extends AppCompatActivity {
             try {
                 bytes = FileActivity.getBytes(this, uri);
 
-//                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), FileName);
-//                try (FileOutputStream fos = new FileOutputStream(file)) {
-//                    fos.write(bytes);
-//                    Toast.makeText(this, "FIle created", Toast.LENGTH_SHORT).show();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -217,13 +210,6 @@ public class Sender extends AppCompatActivity {
         public void run() {
             try {
                 socket = new Socket(IP, Integer.parseInt(PORT));
-//                Out = s;
-//                dataOut = new DataOutputStream(socket.getOutputStream());
-//                Input = socket.getInputStream();
-//                dataInput = new DataInputStream(Input);
-//                fileOut = new FileOutputStream();
-
-
                 os = socket.getOutputStream();
                 is = socket.getInputStream();
                 dataOS = new DataOutputStream(os);
@@ -252,20 +238,7 @@ public class Sender extends AppCompatActivity {
                         return;
                     }
 
-//                    FileOutputStream fos = new FileOutputStream("received_file.png");
-//                    byte[] buffer = new byte[4096];
-//                    int bytesRead;
-//                    while ((bytesRead = is.read(buffer)) != -1) {
-//                        fos.write(buffer, 0, bytesRead);
-//                    }
-//                    fos.flush();
-//                    fos.close();
-//                    is.close();
-////                    if (fileName!= null) {
-////                        runOnUiThread(() -> OutMessage.append("Server: " + fileName + "\n"));
-////                    }
 
-//                    Toast.makeText(Sender.this, "File saved with name ", Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -297,21 +270,7 @@ public class Sender extends AppCompatActivity {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-//            ByteArrayInputStream bais;
-//            try {
-//
-//
-//                bais = new ByteArrayInputStream(bytes);
-//                byte[] buffer = new byte[4096];
-//                int bytesRead;while ((bytesRead = bais.read(buffer)) != -1) {
-//                    os.write(buffer, 0, bytesRead);
-//                }
-//                os.flush();
-//                bais.close();
-//                os.close();
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
+
 
         }
     }
