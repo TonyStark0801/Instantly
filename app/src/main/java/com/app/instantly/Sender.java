@@ -34,8 +34,10 @@ public class Sender extends AppCompatActivity {
     TextView serverIP,serverPort;
     TextView connectionStatus;
     TextView Message;
-    Button btnSend;
+    Button cancel;
     Button btnSelect;
+    Socket socket=null;
+
     byte[] bytes;
     String FileName=null;
     InputStream inputStream = null;
@@ -51,7 +53,7 @@ public class Sender extends AppCompatActivity {
         serverPort = findViewById(R.id.ServerPort);
         connectionStatus = findViewById(R.id.ConnectionStatus);
         Message = findViewById(R.id.OutputMessage);
-        btnSend = findViewById(R.id.btnSend);
+        cancel = findViewById(R.id.cancel_button);
         btnSelect = findViewById(R.id.btnSelectFile);
         Message.setText("");
 
@@ -118,10 +120,10 @@ public class Sender extends AppCompatActivity {
 
         });
 
-        //Sending File Btn Functionality
-        btnSend.setOnClickListener(v -> {
+        cancel.setOnClickListener(v->{
 
         });
+
     }
 
 
@@ -157,7 +159,6 @@ public class Sender extends AppCompatActivity {
                     Thread3 = new Thread(new Thread3(FileName,size,inputStream));
                     Thread3.start();
                 }catch (Exception e){
-                    throw e;
                 }
             }
             else {
@@ -167,7 +168,6 @@ public class Sender extends AppCompatActivity {
         }
         super.onActivityResult(reqCode,resCode,data);
     }
-
 
 
 
@@ -210,7 +210,7 @@ public class Sender extends AppCompatActivity {
 
     //Connecting to Server/Receiver Socket
     class Thread1 implements Runnable {
-        Socket socket=null;
+
         public void run() {
             try {
                 socket = new Socket(IP, Integer.parseInt(PORT));
@@ -227,51 +227,57 @@ public class Sender extends AppCompatActivity {
         }
     }
 
-    //Receiving Files Thread
+    /*Receiving Files*/
     class Thread2 implements Runnable {
         @Override
         public void run() {
+            int lod =1;
             while (true) {
                 try {
                     String fileName = dataIS.readUTF();
+                    long fileSize = dataIS.readLong();
+                    Log.d("Dost",fileName);
 
-                    if (fileName != null) {
+                    if(fileName !=null){
+                        try {
+                            runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
+                        } catch (Exception e) {
+                            Toast.makeText(Sender.this, "Cannot Write the file name", Toast.LENGTH_SHORT).show();
+                        }
                         byte[] buffer = new byte[1024];
-                        Log.d("d",fileName);
+
+
                         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), fileName);
-                        if(!file.exists()){
-                            try{
-                                boolean created = file.createNewFile();
-                                if(!created) {
-                                    throw new IOException("Could not create file: " + fileName);
-                                }
-                            }
-                            catch(IOException e) {
-                                e.printStackTrace();
+                        if (file.exists()) {
+                            int i = 1;
+                            String newFileName;
+                            while (file.exists()) {
+                                newFileName = i + "_" + fileName;
+                                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), newFileName);
+                                i++;
                             }
                         }
-                        runOnUiThread(() -> Message.append("Receiver: " + fileName + "\n"));
-                        try (FileOutputStream fos = new FileOutputStream(file)) {
-                            int len;
-                            while ((len = dataIS.read(buffer)) != -1) {
-                                fos.write(buffer, 0, len);
-//                                Log.d("Received Data Size", String.valueOf(len));
-//                                Log.d("G", String.valueOf(fos.getChannel().size()));
 
+
+                        try (FileOutputStream fos = new FileOutputStream(file,false)) {
+                            int len = 0;
+                            while (fileSize > 0 && (len = dataIS.read(buffer, 0, (int) Math.min(buffer.length, fileSize))) != -1){
+                                fos.write(buffer,0,len);
+                                fileSize -= len;
+                                Log.d("Testing", "running    "+len);
                             }
+                            Log.d("Done", "Stopped");
                             fos.flush();
 
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            throw new RuntimeException(e);
                         }
-                    } else {
-                        Thread1 = new Thread(new Sender.Thread1());
-                        Thread1.start();
-                        return;
                     }
+
                 } catch (IOException e) {
-                   e.printStackTrace();
+                    //
                 }
+
             }
         }
     }
@@ -281,7 +287,6 @@ public class Sender extends AppCompatActivity {
         private  String fileName;
         private InputStream inputStream;
         private  long size;
-
         Thread3(String fileName, long size,InputStream inputStream) {
             this.fileName = fileName;
             this.inputStream = inputStream;
@@ -302,34 +307,33 @@ public class Sender extends AppCompatActivity {
                     long bytesSent = 0;
                     totalBytes =inputStream.available();
 
+                    ProgressBar progressBar = findViewById(R.id.progressBar);
                     long finalTotalBytes = totalBytes;
                     runOnUiThread(() -> {
-                        ProgressBar progressBar = findViewById(R.id.progressBar);
                         progressBar.setMax((int) finalTotalBytes);
                         progressBar.setProgress(0);
                     });
-                    while ((len = inputStream.read(buffer)) > 0) {
+                    while (size>0 && (len = inputStream.read(buffer,0,(int) Math.min(buffer.length,size))) > 0) {
                         dataOS.write(buffer, 0, len);
                         bytesSent += len;
+                        size-=len;
 
                         // Update the progress bar during the file transfer
                         long finalBytesSent = bytesSent;
                         runOnUiThread(() -> {
-                            ProgressBar progressBar = findViewById(R.id.progressBar);
                             progressBar.setProgress((int) finalBytesSent);
                         });
-                        Log.d("G", String.valueOf(dataOS.size()));
                     }
                     dataOS.flush();
                 }catch (IOException e) {
-                    throw new RuntimeException(e);
+                    Toast.makeText(Sender.this, "Can't Send File. Try Again", Toast.LENGTH_SHORT).show();
                 }
                 finally {
                     inputStream.close();
                 }
                 runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                Toast.makeText(Sender.this, "Can't Send file. Please try again.", Toast.LENGTH_SHORT).show();
             }
         }
     }

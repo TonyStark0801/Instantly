@@ -44,7 +44,7 @@ public class CameraHandler extends AppCompatActivity   {
     public void scanCode(){
         ScanOptions options  = new ScanOptions();
         options.setPrompt("Volume Up to flash on");
-        options.setBeepEnabled(true);
+        options.setBeepEnabled(false);
         options.setOrientationLocked(true);
         options.setCaptureActivity(ScannerForSender.class);
         barLauncher.launch(options);

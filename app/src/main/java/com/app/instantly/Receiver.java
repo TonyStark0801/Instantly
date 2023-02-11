@@ -4,8 +4,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -23,6 +26,8 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,6 +40,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -69,7 +75,7 @@ public class Receiver extends AppCompatActivity {
     TextView connectionStatus;
     TextView Message;
 
-    Button btnSend;
+    Button cancel;
     Bitmap bitmap;
     QRGEncoder qrgEncoder;
     Button btnSelect;
@@ -80,6 +86,8 @@ public class Receiver extends AppCompatActivity {
     ImageView qrIcon;
     InputStream is;
     OutputStream os;
+    Socket socket ;
+    long size = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,10 +96,10 @@ public class Receiver extends AppCompatActivity {
         serverIP = findViewById(R.id.ServerIP);
         serverPort = findViewById(R.id.ServerPort);
         Message = findViewById(R.id.OutputMessage);
-        btnSend = findViewById(R.id.btnSend);
         connectionStatus = findViewById(R.id.ConnectionStatus);
         btnSelect = findViewById(R.id.btnSelectFile);
         qrIcon = findViewById(R.id.imageView3);
+        cancel = findViewById(R.id.cancel);
         Bundle extras = getIntent().getExtras();
         String val = extras.getString("key");
         WifiManager wifiManager;
@@ -118,15 +126,101 @@ public class Receiver extends AppCompatActivity {
 
 
         qrIcon.setOnClickListener(v->{generateQrCode("WIFI" + ":" + SERVER_IP + ":" + SERVER_PORT);});
-        /* Send Button Functionality*/
-        btnSend.setOnClickListener(v -> {
-            if (!FileName.isEmpty()) {
-                Thread3 = new Thread(new Receiver.Thread3(FileName,inputStream));
-                Thread3.start();
-            } else {
+        Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        //Initialize file manager to Select files
+        btnSelect.setOnClickListener(v->{
+            PopupMenu popupMenu = new PopupMenu(Receiver.this, btnSelect);
+            popupMenu.getMenuInflater().inflate(R.menu.file_type, popupMenu.getMenu());
+            popupMenu.setOnMenuItemClickListener(menuItem -> {
+                switch (menuItem.getItemId()){
+                    case R.id.audio:
+                        fileIntent.setType("audio/*");
+                        try{
+                            startActivityForResult(Intent.createChooser(fileIntent , "Select a File"),100);
+                        }catch (Exception e){
+                            Toast.makeText(this, "Please Install a File manager", Toast.LENGTH_SHORT).show();
+                        }
+                        return  true;
+                    case R.id.image:
+                        fileIntent.setType("image/*");
+                        try{
+                            startActivityForResult(Intent.createChooser(fileIntent , "Select a File"),100);
+                        }catch (Exception e){
+                            Toast.makeText(this, "Please Install a File manager", Toast.LENGTH_SHORT).show();
+                        }
+
+                        return true;
+                    case R.id.video:
+                        fileIntent.setType("video/*");
+                        try{
+                            startActivityForResult(Intent.createChooser(fileIntent , "Select a File"),100);
+                        }catch (Exception e){
+                            Toast.makeText(this, "Please Install a File manager", Toast.LENGTH_SHORT).show();
+                        }
+                        return true;
+                    case R.id.files:
+                        fileIntent.setType("*/*");
+                        try{
+                            startActivityForResult(Intent.createChooser(fileIntent , "Select a File"),100);
+                        }catch (Exception e){
+                            Toast.makeText(this, "Please Install a File manager", Toast.LENGTH_SHORT).show();
+                        }
+                        return true;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + menuItem.getItemId());
+                }
+            });
+            popupMenu.show();
+
+        });
+
+
+        cancel.setOnClickListener(v->{
+
+        });
+    }
+
+
+    protected  void onActivityResult(int reqCode , int resCode , Intent data){
+        if(reqCode == 100 && resCode == RESULT_OK && data!= null) {
+            Uri uri = data.getData();
+            FileName = FileActivity.getFileName(this, uri);
+            AssetFileDescriptor fileDescriptor = null;
+            try {
+                fileDescriptor = getContentResolver().openAssetFileDescriptor(uri, "r");
+                size = fileDescriptor.getLength();
+            } catch (FileNotFoundException e) {
+                Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show();
+            }finally {
+                try {
+                    if (fileDescriptor != null) {
+                        fileDescriptor.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                inputStream = this.getContentResolver().openInputStream(uri);
+            } catch (FileNotFoundException e) {
+                Toast.makeText(this, "Something went wrong!", Toast.LENGTH_SHORT).show();
+            }
+            if (FileName!=null) {
+                try{
+                    Thread3 = new Thread(new Receiver.Thread3(FileName,size,inputStream));
+                    Thread3.start();
+                }catch (Exception e){
+                    Toast.makeText(this, "Select a file", Toast.LENGTH_SHORT).show();
+                }
+            }
+            else {
                 Toast.makeText(this, "Select a file", Toast.LENGTH_SHORT).show();
             }
-        });
+            Toast.makeText(this, FileName, Toast.LENGTH_SHORT).show();
+        }
+        super.onActivityResult(reqCode,resCode,data);
     }
 
 
@@ -140,7 +234,7 @@ public class Receiver extends AppCompatActivity {
     class Thread1 implements Runnable {
         @Override
         public void run() {
-            Socket socket ;
+
             try {
                 serverSocket = new ServerSocket(Integer.parseInt(SERVER_PORT));
                 runOnUiThread(() -> {
@@ -172,17 +266,15 @@ public class Receiver extends AppCompatActivity {
         public void run() {
             while (true) {
                 try {
-
                     String fileName = dataIS.readUTF();
                     long fileSize = dataIS.readLong();
                     Log.d("Dost",fileName);
 
                     if(fileName !=null){
-                        String finalFileName1 = fileName;
                         try {
-                            runOnUiThread(() -> Message.append("Sender: " + finalFileName1 + "\n"));
+                            runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
                         } catch (Exception e) {
-                            throw e;
+                            Toast.makeText(Receiver.this, "Cannot Write the file name", Toast.LENGTH_SHORT).show();
                         }
                         byte[] buffer = new byte[1024];
 
@@ -198,74 +290,83 @@ public class Receiver extends AppCompatActivity {
                             }
                         }
 
-                        try (FileOutputStream fos = new FileOutputStream(file)) {
+
+                        try (FileOutputStream fos = new FileOutputStream(file,false)) {
                             int len = 0;
-                            while (fileSize > 0 && (len = dataIS.read(buffer, 0, (int) Math.min(buffer.length, fileSize))) != -1) {
-                                fos.write(buffer);
-
-//                                Log.d("Received Data Size", String.valueOf(len));
-//                                Log.d("G", String.valueOf(fos.getChannel().size()));
-
+                            while (fileSize > 0 && (len = dataIS.read(buffer, 0, (int) Math.min(buffer.length, fileSize))) != -1){
+                                fos.write(buffer,0,len);
+                                fileSize -= len;
+                                Log.d("Testing", "running    "+len);
                             }
+                            Log.d("Done", "Stopped");
                             fos.flush();
-                            fos.close();
-
 
                         } catch (IOException e) {
-
+                            throw new RuntimeException(e);
                         }
                     }
 
                 } catch (IOException e) {
-
+                    //
                 }
+
             }
         }
     }
 
-    /*Sending Files*/
+    //Sending File Thread
     class Thread3 implements Runnable {
         private  String fileName;
-        private  InputStream inputStream;
-        Thread3(String fileName, InputStream inputStream) {
+        private InputStream inputStream;
+        private  long size;
+        Thread3(String fileName, long size,InputStream inputStream) {
             this.fileName = fileName;
             this.inputStream = inputStream;
+            this.size = size;
         }
+
         @Override
         public void run() {
             try {
                 dataOS.writeUTF(fileName);
+                dataOS.writeLong(size);
+                Log.d("d",fileName);
+                byte[] buffer = new byte[1024];
+
                 try {
-                    ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-                    int bufferSize = 1024;
-                    byte[] buffer = new byte[bufferSize];
-                    dataOS.writeUTF(fileName);
-                    try {
-                        int len;
-                        while ((len = inputStream.read(buffer)) != -1) {
-                            dataOS.write(buffer, 0, len);
-                        }
-                    } finally {
-                        // close the stream
-                        try {
-                            byteBuffer.close();
-                        } catch (IOException ignored) { /* do nothing */ }
+                    int len;
+                    long totalBytes = 0;
+                    long bytesSent = 0;
+                    totalBytes =inputStream.available();
+
+                    ProgressBar progressBar = findViewById(R.id.progressBar);
+                    long finalTotalBytes = totalBytes;
+                    runOnUiThread(() -> {
+                        progressBar.setMax((int) finalTotalBytes);
+                        progressBar.setProgress(0);
+                    });
+                    while (size>0 && (len = inputStream.read(buffer,0,(int) Math.min(buffer.length,size))) > 0) {
+                        dataOS.write(buffer, 0, len);
+                        bytesSent += len;
+                        size-=len;
+
+                        // Update the progress bar during the file transfer
+                        long finalBytesSent = bytesSent;
+                        runOnUiThread(() -> {
+                            progressBar.setProgress((int) finalBytesSent);
+                        });
                     }
-                    inputStream.close();
-
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    dataOS.flush();
+                }catch (IOException e) {
+                    Toast.makeText(Receiver.this, "Can't Send File. Try Again", Toast.LENGTH_SHORT).show();
                 }
-                dataOS.flush();
-                runOnUiThread(() -> {
-                    Message.append("Sender: " + fileName + "\n");
-                });
-
-
+                finally {
+                    inputStream.close();
+                }
+                runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                Toast.makeText(Receiver.this, "Can't Send file. Please try again.", Toast.LENGTH_SHORT).show();
             }
-
         }
     }
 
