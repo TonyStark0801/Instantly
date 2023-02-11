@@ -3,8 +3,10 @@
     <string name="askingPermission"> Permission Required</string>
     <string name="locationReason"> <b>Allow location permission</b> \n <i>Android 6.0+ need to open it to detect Hotspot nearby.</i></string>
     <string name="fileReason"> <b>Allow file permission</b> \n <i> We require to list the files ,\n so that you can select what ever you want to share</i></string>
-    <string name="wifiReason"> <b>Open WLAN</b> \n <i>Wifi is required to connect with another person</i></string>
+    <string name="wifiReason"> <b>Open WLAN</b> \n <i>Turn on wifi and connect to the hotspot/router before proceeding</i></string>
+    <string name="locationServiceReason"> <b>Enable Location Service</b> \n <i>Please enable location service to create hotspot and broadcast network</i></string>
     <string name="wifiCloseReason"> <b>Close WLAN</b> \n <i>Wifi needs to be closed to start hotspot</i></string>
+    <string name="ScanQrCode">  <b><i>Scan the QrCode below from senders phone</i></b></string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 

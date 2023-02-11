@@ -8,6 +8,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,28 +28,32 @@ public class MainActivity extends AppCompatActivity {
 
         Button sendBtn = findViewById(R.id.sendBtn);
         Button receiveBtn = findViewById(R.id.receiveBtn);
-        Intent permissionActivity = new Intent(getApplicationContext(), SenderPermission.class);
 
 
         sendBtn.setOnClickListener(view -> {
             WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            LocationManager lm  = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+            boolean gps_enabled = false;
+            boolean network_enabled = false;
+            try {
+                gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            } catch(Exception ex) {ex.printStackTrace();}
+
+
             if(ContextCompat.checkSelfPermission(
                     getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED
                     && Environment.isExternalStorageManager()
-                    && wifiManager.isWifiEnabled()) startActivity(new Intent(getApplicationContext(), CameraHandler.class));
+                    && wifiManager.isWifiEnabled() && (gps_enabled && network_enabled)) startActivity(new Intent(getApplicationContext(), CameraHandler.class));
             else {
-                permissionActivity.putExtra("key","SENDER");
-                startActivity(permissionActivity);
+                startActivity(new Intent(getApplicationContext(), SenderPermission.class));
             }
         });
 
 
         receiveBtn.setOnClickListener(view ->{
-            permissionActivity.putExtra("key","RECEIVER");
-            Intent i = new Intent(this, Receiver.class);
-            i.putExtra("key","HOTSPOT");
-            startActivity(i);
-//            startActivity(new Intent(this, WifiOrHotspot.class));
+              startActivity(new Intent(this, WifiOrHotspot.class));
+
         });
     }
 }

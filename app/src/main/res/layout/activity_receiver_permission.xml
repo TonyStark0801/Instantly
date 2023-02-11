@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SenderPermission">
+    tools:context=".ReceiverPermission">
 
 
     <ImageView
@@ -64,11 +64,14 @@
         app:layout_constraintTop_toBottomOf="@+id/locationReasonTxt"
         tools:layout_editor_absoluteX="161dp" />
 
+
+
+
     <TextView
-        android:id="@+id/wifiReasonTxt"
+        android:id="@+id/locationServiceReason"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/wifiReason"
+        android:text="@string/locationServiceReason"
         android:textAlignment="center"
         app:layout_constraintTop_toBottomOf="@+id/locationBtn"
         app:layout_constraintEnd_toEndOf="parent"
@@ -77,11 +80,11 @@
         tools:layout_editor_absoluteX="62dp" />
 
     <Button
-        android:id="@+id/wifiBtn"
+        android:id="@+id/locationService"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="open"
-        app:layout_constraintTop_toBottomOf="@+id/wifiReasonTxt"
+        app:layout_constraintTop_toBottomOf="@+id/locationServiceReason"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:layout_editor_absoluteX="162dp"

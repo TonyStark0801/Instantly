@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.provider.OpenableColumns;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -46,6 +47,8 @@ public  class FileActivity {
         try {
             int len;
             while ((len = inputStream.read(buffer)) != -1) {
+
+                //We have to write data output stream
                 byteBuffer.write(buffer, 0, len);
             }
             bytesResult = byteBuffer.toByteArray();

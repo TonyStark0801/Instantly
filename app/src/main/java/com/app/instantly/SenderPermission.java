@@ -26,6 +26,9 @@ import java.util.Objects;
 
 
 public class SenderPermission extends AppCompatActivity {
+
+    Button locationService;
+    TextView locationServiceReason;
     Button location;
     TextView locationReasonTxt;
 
@@ -35,84 +38,56 @@ public class SenderPermission extends AppCompatActivity {
     Button file;
     TextView fileReasonTxt;
     WifiManager wifiManager;
+    LocationManager lm ;
+    boolean gps_enabled = false;
+    boolean network_enabled = false;
 
     @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_permission);
+        setContentView(R.layout.activity_sender_permission);
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        try {
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch(Exception ex) {ex.printStackTrace();}
+
         if(ContextCompat.checkSelfPermission(
                 getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED
                 && Environment.isExternalStorageManager()
-                && wifiManager.isWifiEnabled())
+                && wifiManager.isWifiEnabled() && (gps_enabled && network_enabled))
         {
             startActivity(new Intent(getApplicationContext(), CameraHandler.class));
         }
 
-
         location = findViewById(R.id.locationBtn);
         locationReasonTxt = findViewById(R.id.locationReasonTxt);
-
         wifi = findViewById(R.id.wifiBtn);
         wifiReasonTxt = findViewById(R.id.wifiReasonTxt);
-
         file = findViewById(R.id.FileBtn);
         fileReasonTxt = findViewById(R.id.fileReasontxt);
+        locationService = findViewById(R.id.locationServiceBtn);
+        locationServiceReason = findViewById(R.id.locationServiceReason);
 
         final int  LOCATION_REQUEST_CODE = 1;
         final int  FILE_REQUEST_CODE = 2;
         final int  WIFI_REQUEST_CODE = 3;
-
-
+        final int  LOCATION_SERVICE_REQUEST_CODE = 4;
 
         //Initially Invisible
         setInvisible(LOCATION_REQUEST_CODE);
         setInvisible(FILE_REQUEST_CODE);
         setInvisible(WIFI_REQUEST_CODE);
-
-        LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        boolean gps_enabled = false;
-        boolean network_enabled = false;
-
-        try {
-            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        } catch(Exception ex) {}
-
-        try {
-            network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        } catch(Exception ex) {}
-
-        if(!gps_enabled && !network_enabled) {
-            // notify user
-            new AlertDialog.Builder(this)
-                    .setMessage(R.string.gps_network_not_enabled)
-                    .setPositiveButton(R.string.open_location_settings, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                        }
-                    })
-                    .setNegativeButton(R.string.Cancel,null)
-                    .show();
-        }
-
-
+        setInvisible(LOCATION_SERVICE_REQUEST_CODE);
 
         /* Location SenderPermission */
         if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED) {
             location.setVisibility(View.VISIBLE);
             locationReasonTxt.setVisibility(View.VISIBLE);
             location.setOnClickListener(v -> {
-
-
-
-
-
-
-
-
 
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
                     new AlertDialog.Builder(this).setTitle("SenderPermission Needed").setMessage("Storage SenderPermission is need to look for the files, so you can select it.\",LOCATION_PERMISSION_CODE );\n")
@@ -153,26 +128,43 @@ public class SenderPermission extends AppCompatActivity {
                 startActivity(panelIntent);
             });
         }
+
+        /*Location Service check*/
+        if(!gps_enabled && !network_enabled) {
+            setVisible(4);
+            locationService.setOnClickListener(v->{
+                this.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            });
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.R)
     protected void onResume() {
+
+        LocationManager lm  = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        boolean gps_enabled = false;
+        boolean network_enabled = false;
+        try {
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch(Exception ex) {ex.printStackTrace();}
+
+
         if(ContextCompat.checkSelfPermission(
                 getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED
                 && Environment.isExternalStorageManager()
-                && wifiManager.isWifiEnabled())
+                && wifiManager.isWifiEnabled() && (gps_enabled && network_enabled))
         {
-            Bundle extras = getIntent().getExtras();
-            if (extras != null) {
-                String value = extras.getString("key");
-                if (Objects.equals(value, "SENDER"))  startActivity(new Intent(getApplicationContext(), CameraHandler.class));
-                else startActivity(new Intent(getApplicationContext(), WifiOrHotspot.class));
-            }
+
+            startActivity(new Intent(getApplicationContext(), CameraHandler.class));
             finish();
         }
+
         if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED) setInvisible(1); else setVisible(1);
         if(Environment.isExternalStorageManager())  setInvisible(2); else setVisible(2);
         if(wifiManager.isWifiEnabled()) setInvisible(3); else setVisible(3);
+        if(gps_enabled && network_enabled) setInvisible(4); else setVisible(4);
+
         super.onResume();
     }
 
@@ -187,6 +179,9 @@ public class SenderPermission extends AppCompatActivity {
             case 3 :
                 wifi.setVisibility(View.GONE);
                 wifiReasonTxt.setVisibility(View.GONE);
+            case 4:
+                locationService.setVisibility(View.GONE);
+                locationServiceReason.setVisibility(View.GONE);
         }
     }
     private void setVisible(int code){
@@ -200,6 +195,9 @@ public class SenderPermission extends AppCompatActivity {
             case 3 :
                 wifi.setVisibility(View.VISIBLE);
                 wifiReasonTxt.setVisibility(View.VISIBLE);
+            case 4:
+                locationService.setVisibility(View.VISIBLE);
+                locationServiceReason.setVisibility(View.VISIBLE);
         }
     }
 

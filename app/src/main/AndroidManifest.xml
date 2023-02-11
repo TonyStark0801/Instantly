@@ -29,10 +29,7 @@
 
 
         <activity
-            android:name=".ReceiverHotspotPermission"
-            android:exported="false" />
-        <activity
-            android:name=".ReceiverWifiPermission"
+            android:name=".ReceiverPermission"
             android:exported="false" />
         <activity
             android:name=".Sender"

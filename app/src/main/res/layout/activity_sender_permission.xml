@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ReceiverHotspotPermission">
+    tools:context=".SenderPermission">
 
 
     <ImageView
@@ -21,7 +21,6 @@
         android:id="@+id/fileReasontxt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
         android:text="@string/fileReason"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -40,17 +39,39 @@
         android:text="open"
         app:layout_constraintTop_toBottomOf="@+id/fileReasontxt"
         tools:layout_editor_absoluteX="162dp" />
+    <TextView
+        android:id="@+id/locationServiceReason"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:text="@string/locationServiceReason"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textAlignment="center"
+        app:layout_constraintTop_toBottomOf="@+id/FileBtn"
+        tools:layout_editor_absoluteX="49dp" />
 
+
+    <Button
+        android:id="@+id/locationServiceBtn"
+        android:layout_width="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="open"
+        app:layout_constraintTop_toBottomOf="@+id/locationServiceReason"
+        tools:layout_editor_absoluteX="162dp" />
     <TextView
         android:id="@+id/locationReasonTxt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="25dp"
         android:text="@string/locationReason"
         android:textAlignment="center"
-        app:layout_constraintTop_toBottomOf="@+id/FileBtn"
+        app:layout_constraintTop_toBottomOf="@+id/locationServiceBtn"
         tools:layout_editor_absoluteX="40dp" />
 
     <Button
@@ -68,12 +89,12 @@
         android:id="@+id/wifiReasonTxt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/wifiCloseReason"
+        android:text="@string/wifiReason"
         android:textAlignment="center"
         app:layout_constraintTop_toBottomOf="@+id/locationBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="25dp"
         tools:layout_editor_absoluteX="62dp" />
 
     <Button

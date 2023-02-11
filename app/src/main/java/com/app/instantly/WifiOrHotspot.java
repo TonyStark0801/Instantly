@@ -2,20 +2,9 @@ package com.app.instantly;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.AlertDialog;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.widget.Button;
-import android.widget.Toast;
 
 import java.util.Objects;
 
@@ -30,26 +19,32 @@ public class WifiOrHotspot extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).hide();
         wifiMode = findViewById(R.id.WifiModeBtn);
         hotspotMode = findViewById(R.id.HotspotModeBtn);
+        Intent i = new Intent(getApplicationContext(), Receiver.class);
 
 
         wifiMode.setOnClickListener(v -> {
-            startActivity(new Intent(getApplicationContext(), ReceiverWifiPermission.class));
+            i.putExtra("key", "WIFI");
+            startActivity(i);
         });
 
         hotspotMode.setOnClickListener(v -> {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            for (Network network : cm.getAllNetworks()) {
-                NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
-                if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                            && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
-                            && !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
-                        Toast.makeText(this, "HOTSPOT IS ON", Toast.LENGTH_SHORT).show();
-                        break;
-                    }
-                }
+            i.putExtra("key", "HOTSPOT");
+            startActivity(i);
 
-            }
+
+//            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+//            for (Network network : cm.getAllNetworks()) {
+//                NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+//                if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+//                    if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+//                            && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
+//                            && !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
+//                        Toast.makeText(this, "HOTSPOT IS ON", Toast.LENGTH_SHORT).show();
+//                        break;
+//                    }
+//                }
+//
+//            }
 
 //            LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
 //            boolean gps_enabled = false;
@@ -77,7 +72,7 @@ public class WifiOrHotspot extends AppCompatActivity {
 //                        .show();
 //            }
 //
-//            startActivity(new Intent(getApplicationContext(),ReceiverHotspotPermission.class));
+//            startActivity(new Intent(getApplicationContext(),ReceiverPermission.class));
         });
 
 

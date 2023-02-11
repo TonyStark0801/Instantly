@@ -1,47 +1,29 @@
 package com.app.instantly;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
+import android.content.res.AssetFileDescriptor;
 import android.net.Uri;
-import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.net.URI;
-import java.nio.file.Files;
-import java.util.Objects;
 
 public class Sender extends AppCompatActivity {
     String IP ="";
@@ -51,37 +33,33 @@ public class Sender extends AppCompatActivity {
     Thread Thread3 = null;
     TextView serverIP,serverPort;
     TextView connectionStatus;
-    TextView OutMessage,InputMessage;
+    TextView Message;
     Button btnSend;
     Button btnSelect;
     byte[] bytes;
-    String FileName;
+    String FileName=null;
+    InputStream inputStream = null;
+    long size = 0;
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sender);
+
         serverIP = findViewById(R.id.ServerIP);
         serverPort = findViewById(R.id.ServerPort);
         connectionStatus = findViewById(R.id.ConnectionStatus);
-        OutMessage = findViewById(R.id.OutputMessage);
-        InputMessage = findViewById(R.id.InputMessage);
+        Message = findViewById(R.id.OutputMessage);
         btnSend = findViewById(R.id.btnSend);
         btnSelect = findViewById(R.id.btnSelectFile);
-        OutMessage.setText("");
-        Bundle extras = getIntent().getExtras();
+        Message.setText("");
 
+        Bundle extras = getIntent().getExtras();
         if (extras != null) {
             String[] TOKENS = extras.getStringArray("key");
-            if(Objects.equals(TOKENS[0], "HOTSPOT")) {
-                connectWifi(TOKENS[1],TOKENS[2]);
-                IP+=TOKENS[3];
-                PORT+=TOKENS[4];
-            }
-            else {
-                IP+=TOKENS[1];
-                PORT+=TOKENS[2];
-            }
+            IP+=TOKENS[1];
+            PORT+=TOKENS[2];
             Thread1 = new Thread(new Thread1());
             Thread1.start();
         }
@@ -92,6 +70,8 @@ public class Sender extends AppCompatActivity {
 
         Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
         fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        //Initialize file manager to Select files
         btnSelect.setOnClickListener(v->{
             PopupMenu popupMenu = new PopupMenu(Sender.this, btnSelect);
             popupMenu.getMenuInflater().inflate(R.menu.file_type, popupMenu.getMenu());
@@ -137,25 +117,51 @@ public class Sender extends AppCompatActivity {
             popupMenu.show();
 
         });
+
+        //Sending File Btn Functionality
         btnSend.setOnClickListener(v -> {
 
-            if (!FileName.isEmpty()) {
-                Thread3 = new Thread(new Thread3(FileName,bytes));
-                Thread3.start();
-            }
         });
     }
 
 
+    //Getting URI from File manager
     protected  void onActivityResult(int reqCode , int resCode ,Intent data){
-        if(reqCode == 100 && resCode == RESULT_OK && data!= null){
+        if(reqCode == 100 && resCode == RESULT_OK && data!= null) {
             Uri uri = data.getData();
-            FileName = FileActivity.getFileName(this,uri);
+            FileName = FileActivity.getFileName(this, uri);
+            AssetFileDescriptor fileDescriptor = null;
             try {
-                bytes = FileActivity.getBytes(this, uri);
-
-            } catch (IOException e) {
+                fileDescriptor = getContentResolver().openAssetFileDescriptor(uri, "r");
+                size = fileDescriptor.getLength();
+//                Log.d("File size: ", String.valueOf(size));
+//                Toast.makeText(this, String.valueOf(size), Toast.LENGTH_SHORT).show();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }finally {
+                try {
+                    if (fileDescriptor != null) {
+                        fileDescriptor.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                inputStream = this.getContentResolver().openInputStream(uri);
+            } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
+            }
+            if (FileName!=null) {
+                try{
+                    Thread3 = new Thread(new Thread3(FileName,size,inputStream));
+                    Thread3.start();
+                }catch (Exception e){
+                    throw e;
+                }
+            }
+            else {
+                Toast.makeText(this, "Select a file", Toast.LENGTH_SHORT).show();
             }
             Toast.makeText(this, FileName, Toast.LENGTH_SHORT).show();
         }
@@ -165,55 +171,51 @@ public class Sender extends AppCompatActivity {
 
 
 
-
     //Connect the Sender device to Receiver's hotspot
-    private void connectWifi(String SSID, String PASSWORD) {
-        WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
-        builder.setSsid(String.valueOf(SSID));
-        builder.setWpa2Passphrase(String.valueOf(PASSWORD));
-        WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
+//    private void connectWifi(String SSID, String PASSWORD) {
+//        WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
+//        builder.setSsid(String.valueOf(SSID));
+//        builder.setWpa2Passphrase(String.valueOf(PASSWORD));
+//        WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
+//
+//        NetworkRequest.Builder requestBuilder = new NetworkRequest.Builder();
+//        requestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+//        requestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
+//        NetworkRequest request = requestBuilder.build();
+//
+//        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+//        connectivityManager.requestNetwork(request, new ConnectivityManager.NetworkCallback() {
+//            @Override
+//            public void onAvailable(Network network) {
+//                super.onAvailable(network);
+//                Log.d("HotSpot", "Connected to hotspot " + SSID);
+//                Toast.makeText(Sender.this, "Connected to Hotspot "+SSID, Toast.LENGTH_SHORT).show();
+//            }
+//
+//            @Override
+//            public void onUnavailable() {
+//                super.onUnavailable();
+//                Log.d("HotSpot", "Failed to connect to hotspot " + SSID);
+//                Toast.makeText(Sender.this, "Failed to connect to hotspot "+SSID, Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
 
-        NetworkRequest.Builder requestBuilder = new NetworkRequest.Builder();
-        requestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-        requestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
-        NetworkRequest request = requestBuilder.build();
-
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        connectivityManager.requestNetwork(request, new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(Network network) {
-                super.onAvailable(network);
-                Log.d("HotSpot", "Connected to hotspot " + SSID);
-                Toast.makeText(Sender.this, "Connected to Hotspot "+SSID, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onUnavailable() {
-                super.onUnavailable();
-                Log.d("HotSpot", "Failed to connect to hotspot " + SSID);
-                Toast.makeText(Sender.this, "Failed to connect to hotspot "+SSID, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 
 
-
-    protected InputStream is;
-    protected  OutputStream os;
+    //Input and output Stream
     protected DataOutputStream dataOS;
     protected  DataInputStream dataIS;
 
 
-    //Connected
+    //Connecting to Server/Receiver Socket
     class Thread1 implements Runnable {
         Socket socket=null;
         public void run() {
             try {
                 socket = new Socket(IP, Integer.parseInt(PORT));
-                os = socket.getOutputStream();
-                is = socket.getInputStream();
-                dataOS = new DataOutputStream(os);
-                dataIS = new DataInputStream(is);
+                dataOS = new DataOutputStream(socket.getOutputStream());
+                dataIS = new DataInputStream(socket.getInputStream());
                 runOnUiThread(() -> connectionStatus.setText(R.string.Connected));
                 Thread2 = new Thread(new Thread2());
                 Thread2.start();
@@ -224,57 +226,113 @@ public class Sender extends AppCompatActivity {
 
         }
     }
+
+    //Receiving Files Thread
     class Thread2 implements Runnable {
         @Override
         public void run() {
             while (true) {
                 try {
-                    String fileName =  dataIS.readUTF();
-                    if (fileName!= null) {
-                        runOnUiThread(() -> OutMessage.append("Receiver: " + fileName + "\n"));
+                    String fileName = dataIS.readUTF();
+
+                    if (fileName != null) {
+                        byte[] buffer = new byte[1024];
+                        Log.d("d",fileName);
+                        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), fileName);
+                        if(!file.exists()){
+                            try{
+                                boolean created = file.createNewFile();
+                                if(!created) {
+                                    throw new IOException("Could not create file: " + fileName);
+                                }
+                            }
+                            catch(IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        runOnUiThread(() -> Message.append("Receiver: " + fileName + "\n"));
+                        try (FileOutputStream fos = new FileOutputStream(file)) {
+                            int len;
+                            while ((len = dataIS.read(buffer)) != -1) {
+                                fos.write(buffer, 0, len);
+//                                Log.d("Received Data Size", String.valueOf(len));
+//                                Log.d("G", String.valueOf(fos.getChannel().size()));
+
+                            }
+                            fos.flush();
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     } else {
-                        Thread1 = new Thread(new Thread1());
+                        Thread1 = new Thread(new Sender.Thread1());
                         Thread1.start();
                         return;
                     }
-
-
                 } catch (IOException e) {
-                    e.printStackTrace();
+                   e.printStackTrace();
                 }
             }
-
         }
     }
+
+    //Sending File Thread
     class Thread3 implements Runnable {
-        private String fileName;
-        private byte[] bytes;
-        Thread3(String fileName, byte[]bytes) {
+        private  String fileName;
+        private InputStream inputStream;
+        private  long size;
+
+        Thread3(String fileName, long size,InputStream inputStream) {
             this.fileName = fileName;
-            this.bytes = bytes;
+            this.inputStream = inputStream;
+            this.size = size;
         }
+
         @Override
         public void run() {
             try {
                 dataOS.writeUTF(fileName);
-                dataOS.writeInt(bytes.length);
-                dataOS.write(bytes);
+                dataOS.writeLong(size);
+                Log.d("d",fileName);
+                byte[] buffer = new byte[1024];
 
-                dataOS.flush();
-                runOnUiThread(() -> {
-                    OutMessage.append("Sender: " + fileName + "\n");
-                    InputMessage.setText("");
-                });
+                try {
+                    int len;
+                    long totalBytes = 0;
+                    long bytesSent = 0;
+                    totalBytes =inputStream.available();
 
+                    long finalTotalBytes = totalBytes;
+                    runOnUiThread(() -> {
+                        ProgressBar progressBar = findViewById(R.id.progressBar);
+                        progressBar.setMax((int) finalTotalBytes);
+                        progressBar.setProgress(0);
+                    });
+                    while ((len = inputStream.read(buffer)) > 0) {
+                        dataOS.write(buffer, 0, len);
+                        bytesSent += len;
 
+                        // Update the progress bar during the file transfer
+                        long finalBytesSent = bytesSent;
+                        runOnUiThread(() -> {
+                            ProgressBar progressBar = findViewById(R.id.progressBar);
+                            progressBar.setProgress((int) finalBytesSent);
+                        });
+                        Log.d("G", String.valueOf(dataOS.size()));
+                    }
+                    dataOS.flush();
+                }catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                finally {
+                    inputStream.close();
+                }
+                runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
-
         }
     }
-
 
     @Override
     public void onBackPressed(){

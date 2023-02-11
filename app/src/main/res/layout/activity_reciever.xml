@@ -1,5 +1,6 @@
 <?xml version = "1.0" encoding = "utf-8"?>
 <RelativeLayout xmlns:android = "http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools = "http://schemas.android.com/tools"
     android:layout_width = "match_parent"
     android:layout_height = "match_parent"
@@ -7,59 +8,64 @@
     tools:context = ".Receiver">
 
     <TextView
-        android:id="@+id/tvIP"
+        android:id="@+id/ServerIP"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="156dp"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
+
+
+    <TextView
+        android:id="@+id/ServerPort"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ServerIP"
+        android:layout_marginTop="-2dp"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
     <TextView
-        android:id = "@+id/tvPort"
-        android:layout_width = "wrap_content"
-        android:layout_height = "wrap_content"
-        android:layout_below = "@+id/tvIP"
-        android:textAppearance = "@style/Base.TextAppearance.AppCompat.Medium" />
-
-
-    <TextView
-        android:id="@+id/tvConnectionStatus"
+        android:id="@+id/ConnectionStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tvPort"
+        android:layout_below="@+id/ServerPort"
+        android:gravity="center"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
     <TextView
-        android:id="@+id/tvMessages"
+        android:id="@+id/OutputMessage"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_below="@+id/tvConnectionStatus"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ConnectionStatus"
         android:layout_marginTop="-2dp"
         android:layout_marginBottom="2dp"
         android:inputType="textMultiLine"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
 
-    <ImageView
-        android:id="@+id/IVQrcode"
+    <Button
+        android:id="@+id/btnSelectFile"
         android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:layout_above="@+id/etMessage"
-        android:layout_below="@+id/tvMessages"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/btnSend"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="1dp"
+        android:text="Select File" />
 
-        android:layout_marginTop="28dp"
-        android:layout_marginBottom="24dp"
-        android:contentDescription="@string/qr_code" />
-
-    <EditText
-        android:id = "@+id/etMessage"
-        android:layout_width = "match_parent"
-        android:layout_height = "wrap_content"
-        android:layout_above = "@+id/btnSend"
-        android:hint = "Enter Message"
-        android:inputType = "text" />
     <Button
         android:id = "@+id/btnSend"
         android:layout_width = "match_parent"
         android:layout_height = "wrap_content"
         android:layout_alignParentBottom = "true"
         android:text = "SEND" />
+
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="46dp"
+        android:layout_height="42dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="14dp"
+        android:layout_marginBottom="15dp"
+        app:srcCompat="@drawable/qr_icon" />
 </RelativeLayout>
