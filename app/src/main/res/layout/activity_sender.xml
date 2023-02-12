@@ -41,18 +41,7 @@
 
 
     <Button
-        android:id="@+id/btnSelectFile"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/cancel_button"
-        android:layout_marginStart="5dp"
-        android:layout_marginTop="1dp"
-        android:layout_marginEnd="5dp"
-        android:layout_marginBottom="1dp"
-        android:text="Select File" />
-
-    <Button
-        android:id = "@+id/cancel_button"
+        android:id = "@+id/btnSelectFile"
         android:layout_width = "match_parent"
         android:layout_height = "wrap_content"
         android:layout_alignParentBottom = "true"
@@ -60,17 +49,33 @@
         android:layout_marginTop="1dp"
         android:layout_marginBottom="1dp"
         android:layout_marginEnd="5dp"
-        android:text = "CANCEL"
-        android:backgroundTint="#FF0808"
+        android:text="Select File"
         />
+
 
     <ProgressBar
         android:id="@+id/progressBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         style="?android:attr/progressBarStyleHorizontal"
-        android:indeterminate="false"
+        android:layout_width="330dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/btnSelectFile"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="15dp"
+        android:backgroundTint="#707AB4"
+        android:max="100"
         android:progress="0"
-        android:max="100" />
+        android:progressTint="#6427D2"
+        android:scaleY="2" />
+    <ImageView
+        android:id="@+id/cancel_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/btnSelectFile"
+        android:layout_marginStart="-7dp"
+        android:layout_marginBottom="10dp"
+        android:layout_toEndOf="@+id/progressBar"
+        android:src="@drawable/cancel"
+        />
 
 </RelativeLayout>

@@ -11,7 +11,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -26,6 +28,7 @@ import java.io.InputStream;
 import java.net.Socket;
 
 public class Sender extends AppCompatActivity {
+    ProgressBar progressBar;
     String IP ="";
     String PORT = "";
     Thread Thread1 = null;
@@ -34,7 +37,7 @@ public class Sender extends AppCompatActivity {
     TextView serverIP,serverPort;
     TextView connectionStatus;
     TextView Message;
-    Button cancel;
+    ImageView cancel;
     Button btnSelect;
     Socket socket=null;
 
@@ -55,7 +58,11 @@ public class Sender extends AppCompatActivity {
         Message = findViewById(R.id.OutputMessage);
         cancel = findViewById(R.id.cancel_button);
         btnSelect = findViewById(R.id.btnSelectFile);
+        progressBar = findViewById(R.id.progressBar);
         Message.setText("");
+        //Initially Invisible
+        setProgressBarInvisible();
+
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -307,8 +314,9 @@ public class Sender extends AppCompatActivity {
                     long bytesSent = 0;
                     totalBytes =inputStream.available();
 
-                    ProgressBar progressBar = findViewById(R.id.progressBar);
+
                     long finalTotalBytes = totalBytes;
+
                     runOnUiThread(() -> {
                         progressBar.setMax((int) finalTotalBytes);
                         progressBar.setProgress(0);
@@ -320,6 +328,7 @@ public class Sender extends AppCompatActivity {
 
                         // Update the progress bar during the file transfer
                         long finalBytesSent = bytesSent;
+                        runOnUiThread(Sender.this::setProgressBarVisible);
                         runOnUiThread(() -> {
                             progressBar.setProgress((int) finalBytesSent);
                         });
@@ -331,6 +340,8 @@ public class Sender extends AppCompatActivity {
                 finally {
                     inputStream.close();
                 }
+
+                runOnUiThread(Sender.this::setProgressBarInvisible);
                 runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
             } catch (IOException e) {
                 Toast.makeText(Sender.this, "Can't Send file. Please try again.", Toast.LENGTH_SHORT).show();
@@ -338,6 +349,16 @@ public class Sender extends AppCompatActivity {
         }
     }
 
+
+    public  void setProgressBarInvisible(){
+        progressBar.setIndeterminate(false);
+        progressBar.setVisibility(View.GONE);
+        cancel.setVisibility(View.GONE);
+    }
+    public  void  setProgressBarVisible(){
+        progressBar.setVisibility(View.VISIBLE);
+        cancel.setVisibility(View.VISIBLE);
+    }
     @Override
     public void onBackPressed(){
         new AlertDialog.Builder(this)

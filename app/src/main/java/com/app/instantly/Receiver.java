@@ -67,6 +67,7 @@ import android.widget.ImageView;
 
 @SuppressLint("SetTextI18n")
 public class Receiver extends AppCompatActivity {
+    ProgressBar progressBar;
     ServerSocket serverSocket;
     Thread Thread1 = null;
     Thread Thread2 = null;
@@ -75,7 +76,7 @@ public class Receiver extends AppCompatActivity {
     TextView connectionStatus;
     TextView Message;
 
-    Button cancel;
+    ImageView cancel;
     Bitmap bitmap;
     QRGEncoder qrgEncoder;
     Button btnSelect;
@@ -100,6 +101,8 @@ public class Receiver extends AppCompatActivity {
         btnSelect = findViewById(R.id.btnSelectFile);
         qrIcon = findViewById(R.id.imageView3);
         cancel = findViewById(R.id.cancel);
+        progressBar = findViewById(R.id.progressBar);
+        setProgressBarInvisible();
         Bundle extras = getIntent().getExtras();
         String val = extras.getString("key");
         WifiManager wifiManager;
@@ -339,7 +342,7 @@ public class Receiver extends AppCompatActivity {
                     long bytesSent = 0;
                     totalBytes =inputStream.available();
 
-                    ProgressBar progressBar = findViewById(R.id.progressBar);
+
                     long finalTotalBytes = totalBytes;
                     runOnUiThread(() -> {
                         progressBar.setMax((int) finalTotalBytes);
@@ -352,6 +355,7 @@ public class Receiver extends AppCompatActivity {
 
                         // Update the progress bar during the file transfer
                         long finalBytesSent = bytesSent;
+                        runOnUiThread(Receiver.this::setProgressBarVisible);
                         runOnUiThread(() -> {
                             progressBar.setProgress((int) finalBytesSent);
                         });
@@ -363,7 +367,8 @@ public class Receiver extends AppCompatActivity {
                 finally {
                     inputStream.close();
                 }
-                runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
+                runOnUiThread(Receiver.this::setProgressBarInvisible);
+                runOnUiThread(() -> Message.append("Receiver: " + fileName + "\n"));
             } catch (IOException e) {
                 Toast.makeText(Receiver.this, "Can't Send file. Please try again.", Toast.LENGTH_SHORT).show();
             }
@@ -492,6 +497,14 @@ public class Receiver extends AppCompatActivity {
             catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public  void setProgressBarInvisible(){
+        progressBar.setVisibility(View.GONE);
+        cancel.setVisibility(View.GONE);
+    }
+    public  void  setProgressBarVisible(){
+        progressBar.setVisibility(View.VISIBLE);
+        cancel.setVisibility(View.VISIBLE);
     }
 
 //    public void createHotspot(){
