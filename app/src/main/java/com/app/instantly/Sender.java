@@ -253,6 +253,15 @@ public class Sender extends AppCompatActivity {
                         }
                         byte[] buffer = new byte[1024];
 
+                        long bytesReceived = 0;
+                        long totalBytes =inputStream.available();
+
+
+                        runOnUiThread(() -> {
+                            progressBar.setMax((int) totalBytes);
+                            progressBar.setProgress(0);
+                        });
+
 
                         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), fileName);
                         if (file.exists()) {
@@ -271,6 +280,13 @@ public class Sender extends AppCompatActivity {
                             while (fileSize > 0 && (len = dataIS.read(buffer, 0, (int) Math.min(buffer.length, fileSize))) != -1){
                                 fos.write(buffer,0,len);
                                 fileSize -= len;
+                                bytesReceived += len;
+                                runOnUiThread(Sender.this::setProgressBarVisible);
+                                long finalBytesReceived = bytesReceived;
+                                runOnUiThread(() -> {
+                                    progressBar.setProgress((int) finalBytesReceived);
+                                });
+
                                 Log.d("Testing", "running    "+len);
                             }
                             Log.d("Done", "Stopped");
@@ -321,6 +337,7 @@ public class Sender extends AppCompatActivity {
                         progressBar.setMax((int) finalTotalBytes);
                         progressBar.setProgress(0);
                     });
+                    runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
                     while (size>0 && (len = inputStream.read(buffer,0,(int) Math.min(buffer.length,size))) > 0) {
                         dataOS.write(buffer, 0, len);
                         bytesSent += len;
@@ -342,7 +359,7 @@ public class Sender extends AppCompatActivity {
                 }
 
                 runOnUiThread(Sender.this::setProgressBarInvisible);
-                runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
+
             } catch (IOException e) {
                 Toast.makeText(Sender.this, "Can't Send file. Please try again.", Toast.LENGTH_SHORT).show();
             }

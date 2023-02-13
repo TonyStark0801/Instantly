@@ -281,7 +281,6 @@ public class Receiver extends AppCompatActivity {
                         }
                         byte[] buffer = new byte[1024];
 
-
                         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), fileName);
                         if (file.exists()) {
                             int i = 1;
@@ -292,17 +291,32 @@ public class Receiver extends AppCompatActivity {
                                 i++;
                             }
                         }
+                        long bytesReceived = 0;
 
+                        long finalFileSize = fileSize;
+                        runOnUiThread(() -> {
+                            progressBar.setMax((int) finalFileSize);
+                            progressBar.setProgress(0);
+                        });
 
                         try (FileOutputStream fos = new FileOutputStream(file,false)) {
                             int len = 0;
+
                             while (fileSize > 0 && (len = dataIS.read(buffer, 0, (int) Math.min(buffer.length, fileSize))) != -1){
                                 fos.write(buffer,0,len);
+                                bytesReceived+=len;
                                 fileSize -= len;
+                                runOnUiThread(Receiver.this::setProgressBarVisible);
+                                long finalBytesReceived = bytesReceived;
+                                runOnUiThread(() -> {
+                                    progressBar.setProgress((int) finalBytesReceived);
+                                });
+
                                 Log.d("Testing", "running    "+len);
                             }
                             Log.d("Done", "Stopped");
                             fos.flush();
+                            runOnUiThread(Receiver.this::setProgressBarInvisible);
 
                         } catch (IOException e) {
                             throw new RuntimeException(e);
@@ -338,16 +352,13 @@ public class Receiver extends AppCompatActivity {
 
                 try {
                     int len;
-                    long totalBytes = 0;
                     long bytesSent = 0;
-                    totalBytes =inputStream.available();
-
-
-                    long finalTotalBytes = totalBytes;
+                    long finalTotalBytes = inputStream.available();
                     runOnUiThread(() -> {
                         progressBar.setMax((int) finalTotalBytes);
                         progressBar.setProgress(0);
                     });
+                    runOnUiThread(() -> Message.append("Receiver: " + fileName + "\n"));
                     while (size>0 && (len = inputStream.read(buffer,0,(int) Math.min(buffer.length,size))) > 0) {
                         dataOS.write(buffer, 0, len);
                         bytesSent += len;
@@ -368,7 +379,7 @@ public class Receiver extends AppCompatActivity {
                     inputStream.close();
                 }
                 runOnUiThread(Receiver.this::setProgressBarInvisible);
-                runOnUiThread(() -> Message.append("Receiver: " + fileName + "\n"));
+
             } catch (IOException e) {
                 Toast.makeText(Receiver.this, "Can't Send file. Please try again.", Toast.LENGTH_SHORT).show();
             }
