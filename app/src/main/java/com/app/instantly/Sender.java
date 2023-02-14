@@ -29,6 +29,7 @@ import java.net.Socket;
 
 public class Sender extends AppCompatActivity {
     ProgressBar progressBar;
+    TextView Percent;
     String IP ="";
     String PORT = "";
     Thread Thread1 = null;
@@ -59,7 +60,10 @@ public class Sender extends AppCompatActivity {
         cancel = findViewById(R.id.cancel_button);
         btnSelect = findViewById(R.id.btnSelectFile);
         progressBar = findViewById(R.id.progressBar);
+//        Percent = findViewById(R.id.percent);
+//        Percent.setVisibility(View.GONE);
         Message.setText("");
+
         //Initially Invisible
         setProgressBarInvisible();
 
@@ -177,7 +181,6 @@ public class Sender extends AppCompatActivity {
     }
 
 
-
     //Connect the Sender device to Receiver's hotspot
 //    private void connectWifi(String SSID, String PASSWORD) {
 //        WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
@@ -243,6 +246,7 @@ public class Sender extends AppCompatActivity {
                 try {
                     String fileName = dataIS.readUTF();
                     long fileSize = dataIS.readLong();
+
                     Log.d("Dost",fileName);
 
                     if(fileName !=null){
@@ -283,7 +287,9 @@ public class Sender extends AppCompatActivity {
                                 bytesReceived += len;
                                 runOnUiThread(Sender.this::setProgressBarVisible);
                                 long finalBytesReceived = bytesReceived;
+//                                String percent = (int) (finalBytesReceived / totalBytes) * 100 +"%";
                                 runOnUiThread(() -> {
+//                                    Percent.setText(percent);
                                     progressBar.setProgress((int) finalBytesReceived);
                                 });
 
@@ -346,9 +352,14 @@ public class Sender extends AppCompatActivity {
                         // Update the progress bar during the file transfer
                         long finalBytesSent = bytesSent;
                         runOnUiThread(Sender.this::setProgressBarVisible);
+//                        String percent = (finalBytesSent / totalBytes) * 100 +"%";
+//                        runOnUiThread(()->{
+//                            Percent.setText(percent);
+//                        });
                         runOnUiThread(() -> {
                             progressBar.setProgress((int) finalBytesSent);
                         });
+
                     }
                     dataOS.flush();
                 }catch (IOException e) {
@@ -368,13 +379,14 @@ public class Sender extends AppCompatActivity {
 
 
     public  void setProgressBarInvisible(){
-        progressBar.setIndeterminate(false);
         progressBar.setVisibility(View.GONE);
         cancel.setVisibility(View.GONE);
+//        Percent.setVisibility(View.GONE);
     }
     public  void  setProgressBarVisible(){
         progressBar.setVisibility(View.VISIBLE);
         cancel.setVisibility(View.VISIBLE);
+//        Percent.setVisibility(View.VISIBLE);
     }
     @Override
     public void onBackPressed(){

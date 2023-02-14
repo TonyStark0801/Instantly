@@ -14,6 +14,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+
 import java.util.Objects;
 
 
@@ -28,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
         Button sendBtn = findViewById(R.id.sendBtn);
         Button receiveBtn = findViewById(R.id.receiveBtn);
+        ImageButton internet = findViewById( R.id.internet);
+
 
 
         sendBtn.setOnClickListener(view -> {
@@ -54,6 +59,11 @@ public class MainActivity extends AppCompatActivity {
         receiveBtn.setOnClickListener(view ->{
               startActivity(new Intent(this, WifiOrHotspot.class));
 
+        });
+
+
+        internet.setOnClickListener(v->{
+            startActivity(new Intent(this, InternetShareActivity.class));
         });
     }
 }

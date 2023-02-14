@@ -68,6 +68,7 @@ import android.widget.ImageView;
 @SuppressLint("SetTextI18n")
 public class Receiver extends AppCompatActivity {
     ProgressBar progressBar;
+    TextView Percent;
     ServerSocket serverSocket;
     Thread Thread1 = null;
     Thread Thread2 = null;
@@ -102,6 +103,8 @@ public class Receiver extends AppCompatActivity {
         qrIcon = findViewById(R.id.imageView3);
         cancel = findViewById(R.id.cancel);
         progressBar = findViewById(R.id.progressBar);
+//        Percent = findViewById(R.id.percent);
+//        Percent.setVisibility(View.GONE);
         setProgressBarInvisible();
         Bundle extras = getIntent().getExtras();
         String val = extras.getString("key");
@@ -271,6 +274,7 @@ public class Receiver extends AppCompatActivity {
                 try {
                     String fileName = dataIS.readUTF();
                     long fileSize = dataIS.readLong();
+                    long max = fileSize;
                     Log.d("Dost",fileName);
 
                     if(fileName !=null){
@@ -308,6 +312,10 @@ public class Receiver extends AppCompatActivity {
                                 fileSize -= len;
                                 runOnUiThread(Receiver.this::setProgressBarVisible);
                                 long finalBytesReceived = bytesReceived;
+//                                String percent =  (finalBytesReceived / finalFileSize) * 100 +"%";
+//                                runOnUiThread(()->{
+//                                    Percent.setText(percent);
+//                                });
                                 runOnUiThread(() -> {
                                     progressBar.setProgress((int) finalBytesReceived);
                                 });
@@ -366,8 +374,10 @@ public class Receiver extends AppCompatActivity {
 
                         // Update the progress bar during the file transfer
                         long finalBytesSent = bytesSent;
+//                        String percent = (int) (finalBytesSent / finalTotalBytes) * 100 +"%";
                         runOnUiThread(Receiver.this::setProgressBarVisible);
                         runOnUiThread(() -> {
+//                            Percent.setText(percent);
                             progressBar.setProgress((int) finalBytesSent);
                         });
                     }
@@ -512,10 +522,12 @@ public class Receiver extends AppCompatActivity {
     public  void setProgressBarInvisible(){
         progressBar.setVisibility(View.GONE);
         cancel.setVisibility(View.GONE);
+//        Percent.setVisibility(View.GONE);
     }
     public  void  setProgressBarVisible(){
         progressBar.setVisibility(View.VISIBLE);
         cancel.setVisibility(View.VISIBLE);
+//        Percent.setVisibility(View.VISIBLE);
     }
 
 //    public void createHotspot(){

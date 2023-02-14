@@ -1,6 +1,7 @@
 package com.app.instantly;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.regex.*;
 import android.Manifest;
 import android.content.Intent;
@@ -26,10 +27,13 @@ public class CameraHandler extends AppCompatActivity   {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_handler);
+        Bundle extras = getIntent().getExtras();
+        String s = extras.getString("key");
 
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Camera Started", Toast.LENGTH_SHORT).show();
-            scanCode();
+                scanCode(s);
 
 
         } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
@@ -41,13 +45,18 @@ public class CameraHandler extends AppCompatActivity   {
     }
 
 
-    public void scanCode(){
+
+    public void scanCode(String s){
         ScanOptions options  = new ScanOptions();
         options.setPrompt("Volume Up to flash on");
         options.setBeepEnabled(false);
         options.setOrientationLocked(true);
         options.setCaptureActivity(ScannerForSender.class);
-        barLauncher.launch(options);
+        if(Objects.equals(s, "WEB"))
+            websiteLauncher.launch(options);
+        else
+            barLauncher.launch(options);
+
     }
 
     ActivityResultLauncher<ScanOptions> barLauncher = registerForActivityResult(new ScanContract(),result -> {
@@ -66,6 +75,13 @@ public class CameraHandler extends AppCompatActivity   {
                 finish();
             }
 
+        }
+    });
+    ActivityResultLauncher<ScanOptions> websiteLauncher = registerForActivityResult(new ScanContract(),result -> {
+        String val = result.getContents();
+        if(val!=null){
+           InternetShareActivity.inputText.setText(val);
+           finish();
         }
     });
 

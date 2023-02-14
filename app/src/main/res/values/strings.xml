@@ -7,8 +7,7 @@
     <string name="locationServiceReason"> <b>Enable Location Service</b> \n <i>Please enable location service to create hotspot and broadcast network</i></string>
     <string name="wifiCloseReason"> <b>Close WLAN</b> \n <i>Wifi needs to be closed to start hotspot</i></string>
     <string name="ScanQrCode">  <b><i>Scan the QrCode below from senders phone</i></b></string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="internet">  <b>Internet Share</b></string>
 
     <string name="qr_code">qr_code</string>
     <string name="enter_your_info">Enter your info</string>
@@ -20,6 +19,7 @@
     <string name="gps_network_not_enabled">\"Location service disabled!  Please enable it\"</string>
     <string name="open_location_settings">Turn on</string>
     <string name="Cancel">Cancel</string>
+    <string name="OR"><b><i>OR</i></b></string>
 
 
 </resources>
