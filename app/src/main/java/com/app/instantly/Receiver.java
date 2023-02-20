@@ -1,51 +1,39 @@
 package com.app.instantly;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Bitmap;
 import android.graphics.Point;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -60,10 +48,6 @@ import java.util.Objects;
 
 import androidmads.library.qrgenearator.QRGContents;
 import androidmads.library.qrgenearator.QRGEncoder;
-
-
-import android.graphics.Bitmap;
-import android.widget.ImageView;
 
 @SuppressLint("SetTextI18n")
 public class Receiver extends AppCompatActivity {
@@ -86,11 +70,10 @@ public class Receiver extends AppCompatActivity {
     public static String SERVER_IP = "";
     public static final String SERVER_PORT = "8080";
     ImageView qrIcon;
-    InputStream is;
-    OutputStream os;
+
     Socket socket ;
     long size = 0;
-
+    Boolean Available ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -184,7 +167,7 @@ public class Receiver extends AppCompatActivity {
 
 
         cancel.setOnClickListener(v->{
-
+            Available = false;
         });
     }
 
@@ -250,8 +233,6 @@ public class Receiver extends AppCompatActivity {
                 });
                 socket = serverSocket.accept();
                 socket.setReuseAddress(true);
-                 is = socket.getInputStream();
-               os = socket.getOutputStream();
                 dataOS = new DataOutputStream(socket.getOutputStream());
                 dataIS = new DataInputStream(socket.getInputStream());
                 runOnUiThread(() -> connectionStatus.setText(R.string.Connected));
@@ -278,6 +259,7 @@ public class Receiver extends AppCompatActivity {
                     Log.d("Dost",fileName);
 
                     if(fileName !=null){
+                        Available = true;
                         try {
                             runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
                         } catch (Exception e) {
@@ -307,6 +289,7 @@ public class Receiver extends AppCompatActivity {
                             int len = 0;
 
                             while (fileSize > 0 && (len = dataIS.read(buffer, 0, (int) Math.min(buffer.length, fileSize))) != -1){
+                                if(!Available) dataOS.writeBoolean(false);
                                 fos.write(buffer,0,len);
                                 bytesReceived+=len;
                                 fileSize -= len;
@@ -455,7 +438,6 @@ public class Receiver extends AppCompatActivity {
         qrCodeIV.setLayoutParams(params);
         qrCodeIV.setPadding(0,0,10,30);
         layout.addView(qrCodeIV);
-
         Button closeButton = new Button(this);
         closeButton.setText("Close");
         closeButton.setOnClickListener(v -> {
@@ -463,12 +445,9 @@ public class Receiver extends AppCompatActivity {
             dialog.dismiss();
         });
         layout.addView(closeButton);
-
         builder.setView(layout);
-
         AlertDialog dialog = builder.create();
         closeButton.setTag(dialog);
-
         dialog.show();
 
 
@@ -508,12 +487,8 @@ public class Receiver extends AppCompatActivity {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
             }
-            if (dataIS != null) {
-                dataIS.close();
-            }
-            if (dataOS != null) {
-                dataOS.close();
-            }
+            if (dataIS != null) dataIS.close();
+            if (dataOS != null) dataOS.close();
         }
             catch (IOException e) {
             e.printStackTrace();

@@ -1,13 +1,9 @@
 package com.app.instantly;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.regex.*;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -16,6 +12,8 @@ import androidx.core.app.ActivityCompat;
 
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
+
+import java.util.Objects;
 
 
 public class CameraHandler extends AppCompatActivity   {

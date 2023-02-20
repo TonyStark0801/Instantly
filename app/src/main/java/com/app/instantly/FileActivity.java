@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.provider.OpenableColumns;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 

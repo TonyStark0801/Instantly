@@ -1,26 +1,18 @@
 package com.app.instantly;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-
-import android.os.Bundle;
-
-
-//Test
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Display;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.zxing.WriterException;
+
 import androidmads.library.qrgenearator.QRGContents;
 import androidmads.library.qrgenearator.QRGEncoder;
 
