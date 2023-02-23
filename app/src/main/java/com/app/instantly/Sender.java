@@ -1,8 +1,6 @@
 package com.app.instantly;
 
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -18,6 +16,9 @@ import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -46,7 +47,7 @@ public class Sender extends AppCompatActivity {
     String FileName=null;
     InputStream inputStream = null;
     long size = 0;
-
+    Boolean Available;
     @SuppressLint("NonConstantResourceId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -325,6 +326,7 @@ public class Sender extends AppCompatActivity {
         @Override
         public void run() {
             try {
+                Available = true;
                 dataOS.writeUTF(fileName);
                 dataOS.writeLong(size);
                 Log.d("d",fileName);
@@ -345,6 +347,8 @@ public class Sender extends AppCompatActivity {
                     });
                     runOnUiThread(() -> Message.append("Sender: " + fileName + "\n"));
                     while (size>0 && (len = inputStream.read(buffer,0,(int) Math.min(buffer.length,size))) > 0) {
+                        if(!dataIS.readBoolean())
+                            Toast.makeText(Sender.this, "Cancel", Toast.LENGTH_SHORT).show();
                         dataOS.write(buffer, 0, len);
                         bytesSent += len;
                         size-=len;

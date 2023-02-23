@@ -1,9 +1,5 @@
 package com.app.instantly;
 
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -15,7 +11,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
+
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import java.util.Objects;
 

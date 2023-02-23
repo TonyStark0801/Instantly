@@ -1,7 +1,5 @@
 package com.app.instantly;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -9,6 +7,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class InternetShareActivity extends AppCompatActivity {
 
@@ -32,7 +32,7 @@ public class InternetShareActivity extends AppCompatActivity {
         Join.setOnClickListener(v->{
             String url = String.valueOf(inputText.getText());
             if(url.equals("")) Toast.makeText(this, "Please Enter url", Toast.LENGTH_SHORT).show();
-            else if (!url.contains("https://instantly-web.vercel.app/tranfer.html?room_id=")) {
+            else if (!url.contains("https://instantly-web.vercel.app/transfer.html?room_id=")) {
                 Toast.makeText(this, "Invalid url", Toast.LENGTH_SHORT).show();
             }
             else {
@@ -42,7 +42,7 @@ public class InternetShareActivity extends AppCompatActivity {
         });
 
         Create.setOnClickListener(v->{
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://instantly-web.vercel.app/tranfer.html"));
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://instantly-web.vercel.app/transfer.html"));
             startActivity(browserIntent);
         });
 
