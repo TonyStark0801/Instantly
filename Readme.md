@@ -33,7 +33,7 @@ Currently, the project only supports **one file transfer at a time**. In case th
 ## Instantly-Web
 Instantly-web is a powerful browser-based solution for sharing files across the internet, eliminating the need for downloading and installing an app. With this amazing feature, users can effortlessly share files with any device, regardless of their location, making it an essential tool for those seeking an easy and efficient file sharing solution.
 
-🔗 [Instantly-Web](https://instantly-web.vercel.app/)
+🔗 [Instantly-Web](https://instantly-transfer.vercel.app/)
 
 🔗 [Instantly-Web Repo](https://github.com/TonyStark0801/instantly-web)
 
